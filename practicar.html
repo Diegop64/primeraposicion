@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Panel de práctica | Primera Posición</title>
+<meta name="description" content="Todos los ejercicios de todos los módulos a la vista. Elige qué practicar hoy.">
+<link rel="stylesheet" href="css/estilo.css?v=202610182235">
+</head>
+<body data-page="practicar">
+<div data-header></div>
+<main class="wrap" data-panel>
+  <header class="pn-top">
+    <div style="display:grid;gap:12px"><h1>Panel de práctica</h1><p class="lead">Todos los ejercicios de todos los módulos en una sola pantalla. Elige uno y se abre aquí mismo. Filtra por lo que quieras trabajar hoy.</p><p class="muted small" data-sum></p></div>
+    <button class="btn primary" type="button" data-random>Elige tú por mí</button>
+  </header>
+  <div style="display:grid;gap:14px;padding-bottom:18px">
+    <div class="chips" role="group" aria-label="Filtrar por tipo" data-chips></div>
+    <div style="display:grid;gap:8px" data-recent></div>
+  </div>
+  <div data-grid></div>
+</main>
+<div class="shade" data-shade hidden></div>
+<aside class="drawer" data-drawer hidden role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+  <div class="drawer-head"><div style="display:grid;gap:2px;min-width:0"><span class="muted small" data-drawer-mod></span><h2 id="drawerTitle" data-drawer-title></h2></div>
+    <div class="row" style="flex-wrap:nowrap"><a class="btn small" data-drawer-link href="#">Ver la lección</a><button class="btn small primary" type="button" data-close>Cerrar</button></div></div>
+  <div class="drawer-body" data-drawer-body></div>
+</aside>
+<div data-footer></div>
+<script src="js/nucleo.js?v=202610182235"></script>
+<script src="js/notacion.js?v=202610182235"></script>
+<script src="js/ejercicios.js?v=202610182235"></script>
+<script src="js/practica.js?v=202610182235"></script>
+<script src="js/oido.js?v=202610182235"></script>
+<script src="js/juegos.js?v=202610182235"></script>
+</body>
+</html>

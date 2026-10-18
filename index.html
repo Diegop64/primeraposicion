@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Primera Posición | Curso de violín desde cero</title>
+<meta name="description" content="Curso de violín por módulos para empezar desde cero: postura, arco, lectura del pentagrama y primera posición, con ejercicios interactivos.">
+<link rel="stylesheet" href="css/estilo.css?v=202610182235">
+</head>
+<body data-page="inicio">
+<div data-header></div>
+<main class="wrap">
+
+<section class="hero">
+  <div class="hero-text">
+    <h1>Del pentagrama a tus dedos</h1>
+    <p class="lead">Un curso de violín para empezar desde cero, en trece módulos que avanzas a tu ritmo: postura, arco, lectura de partituras, la primera posición completa y entrenamiento del oído. Cada módulo tiene explicaciones de profesor, ejercicios que suenan y una lista de objetivos para saber cuándo pasar al siguiente.</p>
+    <div class="row" data-cta>
+      <a class="btn primary" href="modulo-01.html">Empezar por el módulo 1</a>
+      <a class="btn" href="practicar.html">Abrir el panel de práctica</a>
+      <a class="btn" href="juegos.html">Jugar con las notas</a>
+    </div>
+  </div>
+  <div class="hero-play" aria-label="Prueba: pulsa una nota del mástil">
+    <div data-hero-board></div>
+    <div class="hero-readout">
+      <p class="muted small">Pulsa una nota del mástil</p>
+      <p class="big" data-hero-name>La</p>
+      <p data-hero-info></p>
+      <div class="scroll" data-hero-staff></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="como">
+  <h2 id="como">Cómo funciona</h2>
+  <div class="facts">
+    <div><h3>Por módulos, a tu ritmo</h3><p class="muted">Trece módulos en cuatro niveles. Ve en orden o vuelve atrás a repasar cuando quieras. Ningún módulo tiene fecha.</p></div>
+    <div><h3>Practicar, no solo leer</h3><p class="muted">Juegos de lectura, asociación del pentagrama con el mástil, palmas cronometradas, partituras que suenan y un micrófono que te dice si estás afinado.</p></div>
+    <div><h3>Tu progreso se queda aquí</h3><p class="muted">Los objetivos que marcas y tus récords se guardan en este navegador. Puedes cerrar y seguir otro día donde lo dejaste.</p></div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="mapa">
+  <div class="row between"><h2 id="mapa">Los módulos</h2><p class="muted" data-total></p></div>
+  <div data-map></div>
+</section>
+
+<section class="section" aria-labelledby="necesitas">
+  <h2 id="necesitas">Qué necesitas</h2>
+  <div class="facts">
+    <div><h3>Un violín de tu tamaño</h3><p class="muted">Con colofonia y almohadilla u hombrera. Si dudas del tamaño, mira la tabla en <a href="como-estudiar.html#profesor">Cómo estudiar</a>.</p></div>
+    <div><h3>Un espejo y un lápiz</h3><p class="muted">El espejo para vigilar el arco y la postura. El lápiz para los ejercicios de la mano del arco.</p></div>
+    <div><h3>Un sitio con micrófono</h3><p class="muted">Para el afinador y los ejercicios de afinación. Sirve el micrófono del portátil o del móvil.</p></div>
+  </div>
+</section>
+
+</main>
+<div data-footer></div>
+<script src="js/nucleo.js?v=202610182235"></script>
+<script src="js/notacion.js?v=202610182235"></script>
+<script src="js/ejercicios.js?v=202610182235"></script>
+<script src="js/practica.js?v=202610182235"></script>
+<script src="js/oido.js?v=202610182235"></script>
+<script src="js/juegos.js?v=202610182235"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  var PP = window.PP;
+  // Mástil de la portada
+  var board, sel = PP.NOTES.A4;
+  var ord = PP.pool('alto').slice().sort(function(a, b){ return a.m - b.m; });
+  function show(n, sound){
+    sel = n; board.light(n.id);
+    document.querySelector('[data-hero-name]').textContent = PP.name(n);
+    document.querySelector('[data-hero-info]').innerHTML = 'Cuerda <span class="str ' + PP.STRING_CLASS[n.s] + '">' + PP.strName(n.s) + '</span>, ' + PP.fingerText(n);
+    document.querySelector('[data-hero-staff]').innerHTML = PP.staff([{id:n.id, dur:'w'}], {G:11, spacing:70, minWidth:170});
+    if(sound) PP.play(n.m, 1.1);
+  }
+  board = PP.board(document.querySelector('[data-hero-board]'), {notes:PP.POOLS.alto, label:'name', width:210, onPick:function(n){ show(n, true); }});
+  show(sel, false);
+
+  // Mapa de módulos con progreso
+  var last = PP.store.get('last', 0), done = 0, html = '';
+  PP.LEVELS.forEach(function(lv){
+    html += '<div class="level"><div class="level-head"><p class="muted small">Nivel ' + lv.n + '</p><h3>' + lv.t + '</h3><p class="muted small">' + lv.d + '</p></div><ul class="mods">';
+    PP.MODULES.filter(function(m){ return m.lv === lv.n; }).forEach(function(m){
+      var p = PP.modProgress(m.n); if(p === 1) done++;
+      var cls = p === 1 ? ' done' : p > 0 ? ' started' : '';
+      var state = p === 1 ? '✓ Completado' : p > 0 ? Math.round(p * 100) + ' %' : (m.n === last ? 'Aquí lo dejaste' : '');
+      html += '<li><a class="mod-link' + cls + '" href="' + PP.modFile(m.n) + '"><span class="mod-n">' + m.n + '</span><span><b>' + m.t + '</b><span>' + m.d + '</span></span><span class="mod-state">' + state + '</span></a></li>';
+    });
+    html += '</ul></div>';
+  });
+  document.querySelector('[data-map]').innerHTML = html;
+  document.querySelector('[data-total]').textContent = done ? done + ' de ' + PP.MODULES.length + ' completados' : '';
+  if(last){
+    var m = PP.MODULES[last - 1];
+    document.querySelector('[data-cta]').innerHTML = '<a class="btn primary" href="' + PP.modFile(last) + '">Seguir en el módulo ' + last + ': ' + m.t + '</a><a class="btn" href="practicar.html">Abrir el panel de práctica</a>';
+  }
+});
+</script>
+</body>
+</html>
