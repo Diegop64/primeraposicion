@@ -328,3 +328,10 @@ svg text{font-family:var(--f-display)}
 .sheet .drawer-body{padding-top:14px}
 .sheet .sheet-info{min-height:2.6em;margin:0;font-size:.98rem}
 @media (max-width:560px){.sheet .sheet-map{padding:6px 8px}.sheet .sheet-info{font-size:.9rem}}
+/* Micrófono */
+.mic-meter{height:8px;background:var(--soft);border-radius:9px;overflow:hidden;max-width:360px;width:100%}
+.mic-meter i{display:block;height:100%;width:0;border-radius:9px;transition:width .06s linear}
+.listen-box{display:grid;gap:8px;justify-items:center;text-align:center}
+.listen-box .mic-meter{margin:0 auto}
+.heard{font-family:var(--f-display);font-size:1.5rem;font-weight:700;margin:0}
+.heard.ok{color:var(--ok)}

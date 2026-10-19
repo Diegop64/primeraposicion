@@ -147,7 +147,7 @@ EX['defiende'] = function(root){
     } else if(mode === 'mastil'){
       box.innerHTML = `<div class="center" data-board></div>`;
       PP.board($('[data-board]', box), {notes:G.pool.map(n => n.id), label:'finger', width:220, onPick:(n, g) => answerBoard(n, g)});
-    } else box.innerHTML = `<p class="center" data-heard style="font-family:var(--f-display);font-size:1.4rem;font-weight:700">Escuchando...</p>`;
+    } else box.innerHTML = `<div class="listen-box"><p data-heard class="heard">Escuchando...</p>${PP.meterHTML()}<p class="small muted">Puedes tocar cualquier nota que esté en pantalla: se destruye la que coincida, empezando por la más cercana a la clave.</p></div>`;
   }
   const target = () => G.notes.filter(n => !n.dead).sort((a, b) => a.x - b.x)[0];
   function hit(n){
@@ -158,7 +158,7 @@ EX['defiende'] = function(root){
     if(!reduced()) for(let k = 0; k < 16; k++){ const a = Math.random() * Math.PI * 2, v = 60 + Math.random() * 160; G.parts.push({x:n.x, y:yOf(n.note.d), vx:Math.cos(a) * v, vy:Math.sin(a) * v, life:.7, col}); }
     G.floats.push({x:n.x, y:yOf(n.note.d) - gap, txt:`+${pts}`, life:1, col:null});
     G.floats.push({x:n.x, y:yOf(n.note.d) + gap * 1.8, txt:PP.name(n.note), life:1, col});
-    try{ PP.pluck(n.note.m); }catch(e){}
+    try{ if(mode === 'violin') PP.click(0, true); else PP.pluck(n.note.m); }catch(e){}
     if(G.combo === 10) PP.badge('combo10'); if(G.combo === 25) PP.badge('combo25'); if(G.combo === 50) PP.badge('combo50');
     if(G.combo > 0 && G.combo % 20 === 0 && G.lives < 5){ G.lives++; G.floats.push({x:W / 2, y:gap * 2, txt:'+1 vida', life:1.4, col:cssVars().ok}); }
     if(G.hits % 10 === 0){ G.level++; G.banner = {t:1.4, txt:'Nivel ' + G.level}; }
@@ -249,10 +249,11 @@ EX['defiende'] = function(root){
     const dt = Math.min(.05, (now - G.last) / 1000); G.last = now;
     if(!G.paused){
       G.t += dt;
-      const slow = mode === 'violin' ? 1.9 : mode === 'mastil' ? 1.25 : 1;
+      const slow = mode === 'violin' ? 1.35 : mode === 'mastil' ? 1.25 : 1;
       const cross = Math.max(3.1, 7.4 - G.level * .42) * slow, speed = (W - defX()) / cross;
       G.spawnIn -= dt;
       const alive = G.notes.filter(n => !n.dead).length;
+      if(alive === 0 && G.spawnIn > .35) G.spawnIn = .35;   // sin tiempos muertos: si no hay notas, sale otra enseguida
       if(G.spawnIn <= 0 && alive < 5){ spawn(); G.spawnIn = Math.max(.85, 2.7 - G.level * .17) * slow; }
       G.notes.forEach(n => { if(n.dead) return; n.x -= speed * dt; if(n.shake > 0) n.shake -= dt;
         if(n.x <= defX()){ n.dead = true; G.lives--; G.combo = 0; G.misses[n.note.id] = (G.misses[n.note.id] || 0) + 1;
@@ -268,15 +269,24 @@ EX['defiende'] = function(root){
     draw();
     if(!G.over) raf = requestAnimationFrame(loop);
   }
-  let micHist = [];
-  function listen(dt){
-    const f = PP.mic.read(), el = $('[data-heard]', root), n = target();
-    if(f > 0){ micHist.push(PP.freqToMidi(f)); if(micHist.length > 4) micHist.shift(); } else { micHist = []; G.micT = 0; }
-    if(micHist.length >= 3){
-      const mm = micHist.slice().sort((a, b) => a - b)[1], near = Math.round(mm);
-      if(el) el.textContent = 'Oigo: ' + (PP.useLetters() ? PP.LETTERS12 : PP.NAMES12)[((near % 12) + 12) % 12];
-      if(n && Math.abs(mm - n.note.m) * 100 <= 45){ G.micT += dt; if(G.micT > .12){ hit(n); G.micT = 0; micHist = []; } } else G.micT = 0;
-    } else if(el) el.textContent = 'Escuchando...';
+  /* Escucha: en cuanto dos lecturas seguidas coinciden (unos 30 ms) destruye la nota
+     visible que suene igual. Para repetir la misma nota hace falta un nuevo golpe de arco. */
+  function listen(){
+    if(!PP.mic.analyser) return;
+    if(!G.tr) G.tr = PP.tracker();
+    const r = G.tr.step(), el = $('[data-heard]', root);
+    PP.meter(root, r.level, r.ok);
+    if(!r.ok){ if(el && r.level < .15) el.textContent = 'Escuchando...'; return; }
+    const near = Math.round(r.midi);
+    if(el){ el.textContent = 'Oigo: ' + (PP.useLetters() ? PP.LETTERS12 : PP.NAMES12)[((near % 12) + 12) % 12]; }
+    if(!r.stable) return;
+    const alive = G.notes.filter(n => !n.dead).sort((a, b) => a.x - b.x);
+    const match = alive.find(n => Math.abs(r.midi - n.note.m) * 100 <= 50);
+    if(!match){ if(el) el.className = 'heard'; return; }
+    if(G.lastHitM === match.note.m && !r.fresh) return;
+    G.tr.consume(); G.lastHitM = match.note.m;
+    if(el) el.className = 'heard ok';
+    hit(match);
   }
   function draw(){
     const c = cssVars();

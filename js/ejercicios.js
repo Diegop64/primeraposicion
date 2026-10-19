@@ -409,6 +409,7 @@ EX['partitura'] = function(root){
     <div class="row"><div class="seg" role="group" aria-label="Ayudas"><button type="button" data-tg="names">Nombres</button><button type="button" data-tg="fingers">Dedos</button></div>${nt.html}</div>
     <div data-lines style="display:grid;gap:6px"></div>
     <p class="small muted" data-msg>Pulsa cualquier nota para oírla sola. Los números de debajo son los dedos, en el color de su cuerda.</p>
+    <div class="follow-box" data-fbox hidden><div class="row between"><p class="heard" data-fheard>Escuchando...</p><button class="btn small" type="button" data-skip>Saltar esta nota</button></div>${PP.meterHTML()}</div>
     <p class="best" data-pstat>${st0.ok ? `Completada con el micrófono ${st0.ok} ${st0.ok === 1 ? 'vez' : 'veces'}.` : ''}</p>`;
   nt.bind(root);
   const lines = [];
@@ -458,7 +459,7 @@ EX['partitura'] = function(root){
      espera a que el sonido baje un momento (un nuevo arco). */
   function stopFollow(){
     if(!follow) return;
-    cancelAnimationFrame(follow.raf); PP.mic.stop(); follow = null;
+    cancelAnimationFrame(follow.raf); PP.mic.stop(); follow = null; $('[data-fbox]', root).hidden = true;
     $('[data-follow]', root).textContent = 'Seguir con micrófono'; hl(-1); draw();
   }
   async function startFollow(){
@@ -466,8 +467,8 @@ EX['partitura'] = function(root){
     stop();
     try{ await PP.mic.start(); }
     catch(err){ $('[data-msg]', root).innerHTML = `<span style="color:var(--bad);font-weight:700">No se ha podido usar el micrófono.</span> ${err && err.name === 'NotAllowedError' ? 'Actívalo en el candado de la barra de direcciones y recarga.' : (err.message || '')}`; return; }
-    follow = {i:0, raf:0, match:0, gap:true, peak:0, last:performance.now(), wrong:0};
-    $('[data-follow]', root).textContent = 'Parar micrófono';
+    follow = {i:0, raf:0, tr:PP.tracker()};
+    $('[data-follow]', root).textContent = 'Parar micrófono'; $('[data-fbox]', root).hidden = false;
     draw(); advance(0);
     loop();
   }
@@ -478,7 +479,7 @@ EX['partitura'] = function(root){
       const st = PP.stat.update('pieza:' + songId, s => { s.ok++; });
       $('[data-msg]', root).innerHTML = `<span style="color:var(--ok);font-weight:700">Pieza completada.</span> Has tocado todas las notas afinadas. Prueba ahora con el metrónomo.`;
       $('[data-pstat]', root).textContent = `Completada con el micrófono ${st.ok} ${st.ok === 1 ? 'vez' : 'veces'}.`;
-      PP.pluck(81); const f = follow; follow = null; cancelAnimationFrame(f.raf); PP.mic.stop(); $('[data-follow]', root).textContent = 'Seguir con micrófono'; hl(-1);
+      const f = follow; follow = null; cancelAnimationFrame(f.raf); PP.mic.stop(); PP.pluck(81); $('[data-follow]', root).textContent = 'Seguir con micrófono'; $('[data-fbox]', root).hidden = true; hl(-1);
       return;
     }
     hl(i);
@@ -486,23 +487,25 @@ EX['partitura'] = function(root){
     const g = $(`[data-lines] [data-i="${i}"]`, root); if(g && g.scrollIntoView) g.closest('.scroll').scrollLeft = Math.max(0, +g.querySelector('.nh').getAttribute('cx') - 160);
     $('[data-msg]', root).innerHTML = `Nota ${i + 1} de ${song.notes.filter(x => !x.rest).length}: toca <b>${PP.name(n)}</b>, cuerda ${strTag(n.s)}, ${PP.fingerText(n)}.`;
   }
+  /* Avanza en cuanto la nota suena afinada (dos lecturas seguidas, unos 30 ms).
+     Si la nota se repite, espera a un nuevo golpe de arco. */
   function loop(){
     if(!follow) return;
-    const now = performance.now(), dt = now - follow.last; follow.last = now;
-    const f = PP.mic.read(), rms = PP.mic.rms || 0;
-    follow.peak = Math.max(follow.peak * .985, rms);
-    const it = song.notes[follow.i], n = PP.NOTES[it.id];
-    const prev = song.notes[follow.i - 1], repeat = prev && !prev.rest && PP.NOTES[prev.id].m === n.m;
-    if(f < 0 || rms < follow.peak * .5) follow.gap = true;
-    if(f > 0){
-      const cents = (PP.freqToMidi(f) - n.m) * 100;
-      if(Math.abs(cents) <= 40 && (!repeat || follow.gap)){
-        follow.match += dt;
-        if(follow.match >= 110){ paintDone(follow.i); follow.match = 0; follow.gap = false; follow.peak = rms; advance(follow.i + 1); if(!follow) return; }
-      } else follow.match = 0;
-    } else follow.match = 0;
+    const r = follow.tr.step(), it = song.notes[follow.i], n = PP.NOTES[it.id];
+    PP.meter(root, r.level, r.ok);
+    const hd = $('[data-fheard]', root);
+    if(r.ok){
+      const near = Math.round(r.midi), name = (PP.useLetters() ? PP.LETTERS12 : PP.NAMES12)[((near % 12) + 12) % 12];
+      const cents = (r.midi - n.m) * 100;
+      hd.textContent = Math.abs(cents) <= 45 ? `${name}, bien` : `Oigo ${name}`; hd.className = 'heard' + (Math.abs(cents) <= 45 ? ' ok' : '');
+      const prev = song.notes[follow.i - 1], repeat = prev && !prev.rest && PP.NOTES[prev.id].m === n.m;
+      if(r.stable && Math.abs(cents) <= 45 && (!repeat || r.fresh)){
+        follow.tr.consume(); paintDone(follow.i); advance(follow.i + 1); if(!follow) return;
+      }
+    } else if(r.level < .15){ hd.textContent = 'Escuchando...'; hd.className = 'heard'; }
     follow.raf = requestAnimationFrame(loop);
   }
+  $('[data-skip]', root).addEventListener('click', () => { if(follow){ follow.tr.consume(); advance(follow.i + 1); } });
   $('[data-play]', root).addEventListener('click', () => play(false));
   $('[data-along]', root).addEventListener('click', () => play(true));
   $('[data-follow]', root).addEventListener('click', startFollow);
@@ -531,38 +534,46 @@ EX['toca-nota'] = function(root){
   root.innerHTML = `<div class="ex-head"><h3>Toca la nota escrita</h3><span class="ex-kind">Micrófono y afinación</span></div>
     <p class="small muted">El ordenador te escucha y te dice si la nota está afinada. Mantenla en la zona verde un momento para conseguirla. ${MIC_HELP}</p>
     <div class="row between"><div class="row"><button class="btn primary" data-on type="button">Activar micrófono</button><button class="btn" data-hear type="button">Oír la nota</button><button class="btn" data-skip type="button">Otra nota</button></div>${nt.html}</div>
-    <div class="row">${ps.html}</div>
+    <div class="row between">${ps.html}<div class="seg" role="group" aria-label="Exigencia"><button type="button" data-lvl="0">Principiante</button><button type="button" data-lvl="1">Intermedio</button><button type="button" data-lvl="2">Avanzado</button></div></div>
     <div class="two" style="align-items:center"><div style="display:grid;gap:8px"><div class="scroll center" data-staff></div><p data-info class="center"></p></div>
-      <div style="display:grid;gap:6px;justify-items:center">${needleSVG()}<p data-heard style="font-family:var(--f-display);font-size:1.5rem;font-weight:700">Sin sonido</p><p data-fb class="feedback small center" aria-live="polite"></p></div></div>
+      <div style="display:grid;gap:6px;justify-items:center">${needleSVG()}<p data-heard style="font-family:var(--f-display);font-size:1.5rem;font-weight:700">Sin sonido</p>
+        <div class="progress" style="width:min(260px,100%)" title="Mantén la nota afinada hasta llenar la barra"><i data-hold style="width:0"></i></div>
+        <p data-fb class="feedback small center" aria-live="polite"></p>${PP.meterHTML()}</div></div>
     <p class="best">Notas distintas conseguidas: <b data-count>${passed.size}</b></p>`;
   nt.bind(root); ps.bind();
-  let target = null, hold = 0, last = performance.now(), raf = 0, hist = [], won = false;
+  const LV = [{tol:30, hold:220, t:'±30 cents'}, {tol:18, hold:350, t:'±18 cents'}, {tol:10, hold:500, t:'±10 cents'}];
+  let lvl = PP.store.get('mic-lvl', 0), tr = PP.tracker(), smooth = null;
+  const segL = () => root.querySelectorAll('[data-lvl]').forEach(b => { b.setAttribute('aria-pressed', String(+b.dataset.lvl === lvl)); b.title = LV[+b.dataset.lvl].t; });
+  root.querySelectorAll('[data-lvl]').forEach(b => b.addEventListener('click', () => { lvl = +b.dataset.lvl; PP.store.set('mic-lvl', lvl); segL(); }));
+  segL();
+  let target = null, hold = 0, last = performance.now(), raf = 0, won = false;
   function show(){
     $('[data-staff]', root).innerHTML = PP.staff([{id:target.id, dur:'w'}], {G:13, spacing:80, minWidth:220});
     $('[data-info]', root).innerHTML = `Cuerda ${strTag(target.s)}, ${PP.fingerText(target)}`;
   }
-  function next(){ const p = PP.pool(ps.value); let n; do{ n = pick(p); }while(target && n.id === target.id); target = n; hold = 0; won = false; show(); $('[data-fb]', root).textContent = ''; }
+  function next(){ const p = PP.pool(ps.value); let n; do{ n = pick(p); }while(target && n.id === target.id); target = n; hold = 0; won = false; smooth = null; tr.reset(); show(); $('[data-fb]', root).textContent = ''; const h = $('[data-hold]', root); if(h) h.style.width = '0'; }
   function loop(){
     const now = performance.now(), dt = now - last; last = now;
-    const f = PP.mic.read();
-    if(f > 0){ hist.push(PP.freqToMidi(f)); if(hist.length > 5) hist.shift(); } else hist = [];
-    if(hist.length >= 3){
-      const mm = hist.slice().sort((a, b) => a - b)[Math.floor(hist.length / 2)], near = Math.round(mm);
-      const nm = PP.useLetters() ? PP.LETTERS12[near % 12] : PP.NAMES12[near % 12];
+    const r = tr.step(), L = LV[lvl];
+    PP.meter(root, r.level, r.ok);
+    if(r.ok){
+      const near = Math.round(r.midi), nm = (PP.useLetters() ? PP.LETTERS12 : PP.NAMES12)[((near % 12) + 12) % 12];
       $('[data-heard]', root).textContent = nm;
-      const cents = (mm - target.m) * 100;
+      const cents = (r.midi - target.m) * 100;
       if(Math.abs(cents) < 60){
-        setNeedle(root, cents);
-        if(Math.abs(cents) <= 15){ hold += dt; } else hold = Math.max(0, hold - dt);
-        $('[data-fb]', root).textContent = Math.abs(cents) <= 15 ? 'Afinado, mantenla.' : cents > 0 ? 'Un poco alta: baja el dedo hacia la voluta.' : 'Un poco baja: sube el dedo hacia el puente.';
+        smooth = smooth == null ? cents : smooth * .6 + cents * .4;
+        setNeedle(root, smooth);
+        if(Math.abs(cents) <= L.tol) hold += dt; else hold = Math.max(0, hold - dt * .5);
+        $('[data-fb]', root).textContent = Math.abs(cents) <= L.tol ? 'Afinada, mantenla.' : cents > 0 ? 'Un poco alta: baja el dedo hacia la voluta.' : 'Un poco baja: sube el dedo hacia el puente.';
       } else {
-        setNeedle(root, cents > 0 ? 50 : -50); hold = 0;
-        const off = Math.round(mm - target.m);
+        smooth = null; setNeedle(root, cents > 0 ? 50 : -50); hold = Math.max(0, hold - dt);
+        const off = Math.round(r.midi - target.m);
         $('[data-fb]', root).textContent = Math.abs(off) === 12 ? 'Es la nota correcta pero en otra octava: revisa la cuerda.' : `Estás tocando ${nm}. Buscamos ${PP.name(target)}.`;
       }
-      if(hold > 700 && !won){ won = true; passed.add(target.id); PP.store.set('mic-ok', [...passed]); $('[data-count]', root).textContent = passed.size;
-        $('[data-fb]', root).innerHTML = `<span class="ok">¡Conseguida! ${PP.name(target)} afinada.</span>`; setTimeout(next, 1300); }
-    } else { $('[data-heard]', root).textContent = 'Sin sonido'; hold = Math.max(0, hold - dt); }
+    } else { if(r.level < .15) $('[data-heard]', root).textContent = 'Sin sonido'; hold = Math.max(0, hold - dt * .3); }
+    $('[data-hold]', root).style.width = Math.min(100, 100 * hold / L.hold) + '%';
+    if(hold >= L.hold && !won){ won = true; passed.add(target.id); PP.store.set('mic-ok', [...passed]); $('[data-count]', root).textContent = passed.size;
+      $('[data-fb]', root).innerHTML = `<span class="ok">¡Conseguida! ${PP.name(target)} afinada.</span>`; PP.click(0, true); setTimeout(next, 800); }
     raf = requestAnimationFrame(loop);
   }
   $('[data-on]', root).addEventListener('click', async e => {
@@ -587,8 +598,8 @@ EX['afinador'] = function(root){
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" data-drones>${OPEN.map(n => `<button class="btn" type="button" data-id="${n.id}" aria-pressed="false" style="display:grid;justify-items:center;gap:0;border-color:var(--${PP.STRING_CLASS[n.s]})"><b style="font-family:var(--f-display);font-size:1.4rem">${PP.name(n)}</b><span class="small muted">${PP.hz(n.m).toFixed(1)} Hz</span></button>`).join('')}</div></div></div>`;
   let raf = 0, hist = [], drone = null, droneBtn = null;
   function loop(){
-    const f = PP.mic.read();
-    if(f > 0){ hist.push(PP.freqToMidi(f)); if(hist.length > 6) hist.shift(); } else hist = [];
+    const a = PP.mic.analyze();
+    if(a.ok){ hist.push(a.midi); if(hist.length > 5) hist.shift(); } else if(a.level < .1) hist = [];
     if(hist.length >= 3){
       const mm = hist.slice().sort((a, b) => a - b)[Math.floor(hist.length / 2)];
       const str = OPEN.reduce((a, b) => Math.abs(b.m - mm) < Math.abs(a.m - mm) ? b : a);
@@ -610,7 +621,7 @@ EX['afinador'] = function(root){
     if(droneBtn === b){ b.setAttribute('aria-pressed', 'false'); b.style.background = ''; droneBtn = null; return; }
     root.querySelectorAll('[data-drones] button').forEach(x => { x.setAttribute('aria-pressed', 'false'); x.style.background = ''; });
     b.setAttribute('aria-pressed', 'true'); b.style.background = 'var(--soft)'; droneBtn = b;
-    drone = PP.play(PP.NOTES[b.dataset.id].m, 90, 0, {vol:.14, vibrato:false});
+    drone = PP.play(PP.NOTES[b.dataset.id].m, 90, 0, {vol:.14, vibrato:false, noMute:true});
   }));
 };
 

@@ -149,6 +149,7 @@ PP.play = function(m, dur, when, opts){
   out.gain.setValueAtTime(vol, t + Math.max(atk + 0.02, dur - 0.1));
   out.gain.linearRampToValueAtTime(0.0001, t + dur);
   nodes.forEach(o => { o.start(t); o.stop(t + dur + 0.05); });
+  if(PP.mic.stream && !opts.noMute) PP.markOut(when, dur);
   return { stop(){ try{ const n = c.currentTime; out.gain.cancelScheduledValues(n); out.gain.setValueAtTime(out.gain.value, n); out.gain.linearRampToValueAtTime(0.0001, n + 0.08); nodes.forEach(o => o.stop(n + 0.12)); }catch(e){} } };
 };
 PP.pluck = function(m, when){
@@ -157,6 +158,7 @@ PP.pluck = function(m, when){
   o.type = 'triangle'; o.frequency.value = f; lp.type = 'lowpass'; lp.frequency.setValueAtTime(f * 8, t); lp.frequency.exponentialRampToValueAtTime(f * 1.5, t + 0.6);
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
   o.connect(lp); lp.connect(g); g.connect(master); o.start(t); o.stop(t + 1.3);
+  if(PP.mic.stream) PP.markOut(when, .9);
 };
 PP.click = function(when, accent){
   const c = PP.ac(), t = c.currentTime + (when || 0), o = c.createOscillator(), g = c.createGain();
@@ -166,46 +168,117 @@ PP.click = function(when, accent){
 };
 
 /* ---------- Detección de afinación (micrófono) ---------- */
+/* Detector de altura de McLeod (MPM, "A smarter way to find pitch", 2005):
+   función de diferencia cuadrada normalizada (NSDF) y elección del primer pico
+   que supera el 86 % del máximo, lo que evita los errores de octava típicos de la
+   autocorrelación simple. Devuelve {f, clarity} o null. Es una función pura para poder probarla. */
+PP.detectPitch = function(b, sr, minF, maxF){
+  minF = minF || 180; maxF = maxF || 1500;
+  const N = b.length, maxLag = Math.min(N >> 1, Math.floor(sr / minF)), minLag = Math.max(2, Math.floor(sr / maxF)), W = N - maxLag;
+  const sq = new Float64Array(N + 1);
+  for(let i = 0; i < N; i++) sq[i + 1] = sq[i] + b[i] * b[i];
+  const nsdf = new Float32Array(maxLag + 2), e0 = sq[W];
+  for(let t = 0; t <= maxLag + 1 && t + W <= N; t++){
+    let acf = 0; for(let j = 0; j < W; j++) acf += b[j] * b[j + t];
+    const m = e0 + (sq[W + t] - sq[t]);
+    nsdf[t] = m > 0 ? 2 * acf / m : 0;
+  }
+  let t = 1; while(t <= maxLag && nsdf[t] > 0) t++;
+  if(t < minLag) t = minLag;
+  const peaks = []; let inLobe = false, bt = -1, bv = -1;
+  for(; t <= maxLag; t++){
+    if(nsdf[t] > 0 && nsdf[t - 1] <= 0){ inLobe = true; bt = t; bv = nsdf[t]; }
+    if(inLobe){ if(nsdf[t] > bv){ bv = nsdf[t]; bt = t; } if(nsdf[t] <= 0){ peaks.push([bt, bv]); inLobe = false; } }
+  }
+  if(inLobe && bt > 0) peaks.push([bt, bv]);
+  if(!peaks.length) return null;
+  const nmax = Math.max(...peaks.map(p => p[1]));
+  const pk = peaks.find(p => p[1] >= .86 * nmax);
+  const k = pk[0], y1 = nsdf[k - 1], y2 = nsdf[k], y3 = nsdf[k + 1];
+  const den = y1 - 2 * y2 + y3, shift = den ? .5 * (y1 - y3) / den : 0;
+  const f = sr / (k + shift);
+  if(f < minF || f > maxF) return null;
+  return {f, clarity:y2 - .25 * (y1 - y3) * shift};
+};
+
+/* Los sonidos de la propia web no deben confundirse con el violín */
+PP._outUntil = 0;
+PP.markOut = function(when, dur){ PP._outUntil = Math.max(PP._outUntil, performance.now() + ((when || 0) + (dur || 0)) * 1000 + 90); };
+
 PP.mic = {
-  stream:null, analyser:null, buf:null, running:false,
+  stream:null, analyser:null, buf:null, rms:0, clarity:0, noise:.004,
   async start(){
     const c = PP.ac();
     if(this.stream) return true;
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('Este navegador no permite usar el micrófono desde aquí. Prueba con Chrome, Edge o Firefox actualizados.');
-    this.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
+    this.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false, channelCount:1}});
     const src = c.createMediaStreamSource(this.stream);
-    this.analyser = c.createAnalyser(); this.analyser.fftSize = 4096;
-    src.connect(this.analyser);
+    const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 120; hp.Q.value = .7;   // quita zumbidos y golpes graves
+    this.analyser = c.createAnalyser(); this.analyser.fftSize = 2048;                                     // ~43 ms a 48 kHz
+    src.connect(hp); hp.connect(this.analyser);
     this.buf = new Float32Array(this.analyser.fftSize);
     return true;
   },
   stop(){ if(this.stream){ this.stream.getTracks().forEach(t => t.stop()); } this.stream = null; this.analyser = null; },
-  /* Autocorrelación con interpolación parabólica. Devuelve Hz o -1. */
-  read(){
-    if(!this.analyser) return -1;
+  /* Un análisis: {ok, f, midi, clarity, rms, level} */
+  analyze(){
+    const out = {ok:false, f:-1, midi:0, clarity:0, rms:0, level:0};
+    if(!this.analyser) return out;
     this.analyser.getFloatTimeDomainData(this.buf);
-    const b = this.buf, sr = PP.ac().sampleRate;
+    const b = this.buf;
     let rms = 0; for(let i = 0; i < b.length; i++) rms += b[i] * b[i];
-    rms = Math.sqrt(rms / b.length); this.rms = rms; if(rms < 0.012) return -1;
-    const size = 2048, minLag = Math.floor(sr / 1400), maxLag = Math.floor(sr / 170);
-    const c = new Float32Array(maxLag + 2);
-    for(let lag = minLag; lag <= maxLag + 1; lag++){
-      let s = 0; for(let i = 0; i < size; i++) s += b[i] * b[i + lag]; c[lag] = s;
-    }
-    let e0 = 0; for(let i = 0; i < size; i++) e0 += b[i] * b[i];
-    let best = -1, bestVal = 0;
-    for(let lag = minLag + 1; lag <= maxLag; lag++){
-      if(c[lag] > c[lag - 1] && c[lag] >= c[lag + 1] && c[lag] / e0 > 0.5){
-        if(c[lag] > bestVal * 1.08 || best < 0){ best = lag; bestVal = c[lag]; }
-        if(c[lag] / e0 > 0.85) break;
+    rms = Math.sqrt(rms / b.length); this.rms = out.rms = rms;
+    out.level = Math.max(0, Math.min(1, (20 * Math.log10(rms + 1e-9) + 62) / 50));
+    if(performance.now() < PP._outUntil) return out;
+    const thr = Math.max(.0015, this.noise * 2.2);
+    if(rms < thr){ this.noise = Math.min(.05, this.noise < rms ? this.noise * 1.002 : this.noise * .7 + rms * .3); return out; }
+    const r = PP.detectPitch(b, PP.ac().sampleRate);
+    out.clarity = this.clarity = r ? r.clarity : 0;
+    if(!r || r.clarity < .72){ this.noise = Math.min(.05, this.noise * .995 + rms * .005); return out; }
+    out.ok = true; out.f = r.f; out.midi = 69 + 12 * Math.log2(r.f / 440);
+    return out;
+  },
+  read(){ const a = this.analyze(); return a.ok ? a.f : -1; }
+};
+
+/* Seguidor de notas: estabiliza las lecturas y detecta cuándo empieza una nota nueva
+   (cambio de arco, silencio breve, subida de volumen o salto de altura). */
+PP.tracker = function(){
+  return {
+    prev:null, stable:null, gap:999, fresh:true, last:performance.now(), hist:[], consumedAt:0,
+    step(){
+      const now = performance.now(), dt = now - this.last; this.last = now;
+      const a = PP.mic.analyze();
+      this.hist.push([now, a.rms]); while(this.hist.length && now - this.hist[0][0] > 160) this.hist.shift();
+      const res = {ok:false, stable:false, fresh:false, midi:0, rms:a.rms, level:a.level, clarity:a.clarity};
+      if(!a.ok){ this.gap += dt; this.prev = null; if(this.gap > 40) this.fresh = true; if(this.peak && a.rms < this.peak * .5 && now - this.consumedAt > 90) this.dipped = true; return res; }
+      // nuevo golpe de arco: un silencio breve, o el volumen cae a menos de la mitad
+      // del máximo de la nota anterior (lo que ocurre al cambiar el arco de dirección)
+      this.peak = Math.max(this.peak || 0, a.rms);
+      if(now - this.consumedAt > 90 && a.rms < this.peak * .5) this.dipped = true;
+      if(this.gap > 40 || (this.dipped && a.rms > this.peak * .6)) this.fresh = true;
+      this.gap = 0;
+      res.ok = true; res.midi = a.midi;
+      if(this.prev != null && Math.abs(a.midi - this.prev) < .4){
+        res.stable = true; res.midi = (a.midi + this.prev) / 2;
+        if(this.stable != null && Math.abs(res.midi - this.stable) > .6) this.fresh = true;
+        this.stable = res.midi;
       }
-    }
-    if(best < 0) return -1;
-    const y1 = c[best - 1], y2 = c[best], y3 = c[best + 1];
-    const a = (y1 + y3 - 2 * y2) / 2, bb = (y3 - y1) / 2;
-    const shift = a ? -bb / (2 * a) : 0;
-    return sr / (best + shift);
-  }
+      this.prev = a.midi;
+      res.fresh = this.fresh;
+      return res;
+    },
+    consume(){ this.fresh = false; this.consumedAt = performance.now(); this.peak = 0; this.dipped = false; },
+    reset(){ this.prev = null; this.stable = null; this.gap = 999; this.fresh = true; this.hist = []; this.peak = 0; this.dipped = false; this.last = performance.now(); }
+  };
+};
+/* Medidor de entrada del micrófono */
+PP.meterHTML = () => `<div class="mic-meter" aria-hidden="true"><i data-meter></i></div><p class="small muted" data-meter-tip></p>`;
+PP.meter = function(root, level, ok){
+  const m = root.querySelector('[data-meter]'); if(m){ m.style.width = Math.round(level * 100) + '%'; m.style.background = ok ? 'var(--ok)' : level > .25 ? 'var(--la)' : 'var(--rule)'; }
+  const t = root.querySelector('[data-meter-tip]'); if(!t) return;
+  root._lowT = level < .18 ? (root._lowT || performance.now()) : 0;
+  t.textContent = root._lowT && performance.now() - root._lowT > 3000 ? 'Te oigo muy bajo: acerca el violín al micrófono o sube el volumen de entrada del micrófono en tu sistema.' : '';
 };
 PP.freqToMidi = f => 69 + 12 * Math.log2(f / 440);
 PP.NAMES12 = ['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
