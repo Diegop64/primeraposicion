@@ -26,6 +26,7 @@ El progreso (objetivos, récords, estrellas, insignias) se guarda en el `localSt
 | `js/practica.js` | Cancionero, ejercicios añadidos y panel de práctica |
 | `js/oido.js` | Módulo 13: entrenamiento auditivo |
 | `js/juegos.js` | Juegos e insignias |
+| `js/voz.js` | Respuestas con la voz en los juegos. Reconocimiento 100 % local en el navegador: no graba ni envía audio; solo guarda (si lo permites) unos números de calibración |
 | `fonts/` | Bricolage Grotesque, Atkinson Hyperlegible y Noto Music (licencia SIL OFL) |
 | `herramientas-dev/generar_modulos.py` | Genera las páginas de módulo |
 

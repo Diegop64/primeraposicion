@@ -1,10 +1,6 @@
-# Genera las páginas de módulo (modulo-01.html ... modulo-13.html), herramientas.html
-# y como-estudiar.html a partir de una plantilla común.
-# Uso:  python herramientas-dev/generar_modulos.py
-# Después de ejecutarlo, actualiza también el número de versión (?v=...) de
-# index.html, practicar.html y juegos.html para que el navegador no use copias antiguas.
+# Genera las páginas de módulo de Primera Posición a partir de una plantilla común.
 import os, html
-OUT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # la carpeta raíz del proyecto
+OUT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 HEAD = '''<!doctype html>
 <html lang="es">
@@ -25,6 +21,7 @@ FOOT = '''<div data-footer></div>
 <script src="js/practica.js?v=__V__"></script>
 <script src="js/oido.js?v=__V__"></script>
 <script src="js/juegos.js?v=__V__"></script>
+<script src="js/voz.js?v=__V__"></script>
 </body>
 </html>
 '''

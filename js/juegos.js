@@ -81,9 +81,10 @@ EX['defiende'] = function(root){
       <p class="muted">Las notas avanzan por el pentagrama hacia la clave de sol. Destrúyelas antes de que lleguen diciendo cuál es. Cada acierto seguido suma al combo y multiplica tus puntos. Si una nota llega a la clave, pierdes una vida.</p>
       <div class="callout teacher"><b>Cómo avanzar</b>Cada mundo tiene tres estrellas: se ganan acertando ${STAR_AT[0]}, ${STAR_AT[1]} y ${STAR_AT[2]} notas en una misma partida. Con la primera estrella de un mundo se abre el siguiente. La estrella se guarda en el momento en que la consigues, aunque luego pierdas.</div>
       <div class="worlds" data-worlds></div>
-      <div class="row"><div class="seg" role="group" aria-label="Cómo responder"><button type="button" data-mode="nombre">Por su nombre</button><button type="button" data-mode="mastil">En el mástil</button><button type="button" data-mode="violin">Con mi violín</button></div>
+      <div class="row"><div class="seg" role="group" aria-label="Cómo responder"><button type="button" data-mode="nombre">Por su nombre</button><button type="button" data-mode="mastil">En el mástil</button><button type="button" data-mode="violin">Con mi violín</button><button type="button" data-mode="voz">Con mi voz</button></div>
         <label class="row small" style="gap:8px;cursor:pointer"><input type="checkbox" data-colors ${colors ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--ink)">Notas con el color de su cuerda (más fácil)</label></div>
       <p class="small muted" data-modehelp></p>
+      <div data-vozcal hidden></div>
       <div class="row"><button class="btn primary" data-start type="button">Jugar</button><span class="best" data-best></span></div>
     </div>
     <div class="game" data-game hidden>
@@ -108,7 +109,15 @@ EX['defiende'] = function(root){
     root.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
     $('[data-modehelp]', root).textContent = mode === 'nombre' ? 'Pulsa el nombre de la nota marcada. En el teclado puedes usar los números del 1 en adelante.' :
       mode === 'mastil' ? 'Pulsa en el mástil el sitio donde se toca la nota marcada. Así unes lo que lees con lo que hacen tus dedos.' :
-      'Toca la nota con tu violín y el micrófono la destruye si está afinada. Las notas van más despacio. Acerca el violín al ordenador.';
+      mode === 'voz' ? 'Di el nombre de la nota marcada: "sol", "la", "fa sostenido"... Tu voz se reconoce dentro del navegador y no sale de este ordenador.' :
+      'Toca la nota con tu violín y el micrófono la destruye si está afinada. Acerca el violín al ordenador.';
+    const needCal = mode === 'voz' && !(PP.voz && PP.voz.calibrated());
+    const vc = $('[data-vozcal]', root);
+    if(needCal && !vc.dataset.mounted){ vc.innerHTML = '<div data-ex="voz-calibrar"></div>'; PP.mountAll(vc); vc.dataset.mounted = '1'; }
+    if(!needCal && vc.dataset.mounted){ PP.unmountAll(vc); vc.innerHTML = ''; delete vc.dataset.mounted; }
+    vc.hidden = !needCal;
+    $('[data-start]', root).disabled = needCal;
+    $('[data-start]', root).textContent = needCal ? 'Calibra tu voz para jugar' : 'Jugar';
     const b = PP.store.get('def-best', {})[world + mode] || 0;
     $('[data-best]', root).textContent = b ? `Tu récord en este mundo: ${b} puntos` : '';
   }
@@ -135,6 +144,7 @@ EX['defiende'] = function(root){
     $('[data-res]', root).hidden = true; $('[data-stage]', root).hidden = false; $('[data-answer]', root).hidden = false; $('[data-pause]', root).hidden = false;
     size(); buildAnswer(); hud();
     PP.badge('primera');
+    if(mode === 'voz') PP.voz.listen(seq => onVoice(seq), lv => PP.meter(root, lv, lv > .4)).then(stop => { if(G && !G.over) G.stopVoz = stop; else stop(); }).catch(err => { G.paused = true; overlay(`<h3>No se ha podido usar el micrófono</h3><p>${err && err.name === 'NotAllowedError' ? 'Has bloqueado el permiso: actívalo en el candado de la barra de direcciones y recarga.' : (err.message || '')}</p><div class="row"><button class="btn primary" type="button" data-menu-back>Volver</button></div>`); });
     if(mode === 'violin') PP.mic.start().catch(err => { G.paused = true; overlay(`<h3>No se ha podido usar el micrófono</h3><p>${err && err.name === 'NotAllowedError' ? 'Has bloqueado el permiso: actívalo en el candado de la barra de direcciones y recarga.' : (err.message || '')}</p><div class="row"><button class="btn primary" type="button" data-menu-back>Volver</button></div>`); });
     cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
   }
@@ -147,6 +157,8 @@ EX['defiende'] = function(root){
     } else if(mode === 'mastil'){
       box.innerHTML = `<div class="center" data-board></div>`;
       PP.board($('[data-board]', box), {notes:G.pool.map(n => n.id), label:'finger', width:220, onPick:(n, g) => answerBoard(n, g)});
+    } else if(mode === 'voz'){
+      box.innerHTML = `<div class="listen-box"><p data-heard class="heard">Di el nombre de la nota marcada</p>${PP.meterHTML()}<p class="small muted">Para los sostenidos di, por ejemplo, "fa sostenido" seguido.</p></div>`;
     } else box.innerHTML = `<div class="listen-box"><p data-heard class="heard">Escuchando...</p>${PP.meterHTML()}<p class="small muted">Puedes tocar cualquier nota que esté en pantalla: se destruye la que coincida, empezando por la más cercana a la clave.</p></div>`;
   }
   const target = () => G.notes.filter(n => !n.dead).sort((a, b) => a.x - b.x)[0];
@@ -158,7 +170,7 @@ EX['defiende'] = function(root){
     if(!reduced()) for(let k = 0; k < 16; k++){ const a = Math.random() * Math.PI * 2, v = 60 + Math.random() * 160; G.parts.push({x:n.x, y:yOf(n.note.d), vx:Math.cos(a) * v, vy:Math.sin(a) * v, life:.7, col}); }
     G.floats.push({x:n.x, y:yOf(n.note.d) - gap, txt:`+${pts}`, life:1, col:null});
     G.floats.push({x:n.x, y:yOf(n.note.d) + gap * 1.8, txt:PP.name(n.note), life:1, col});
-    try{ if(mode === 'violin') PP.click(0, true); else PP.pluck(n.note.m); }catch(e){}
+    try{ if(mode === 'violin' || mode === 'voz'){ PP.click(0, true); PP.markOut(0, .12); } else PP.pluck(n.note.m); }catch(e){}
     if(G.combo === 10) PP.badge('combo10'); if(G.combo === 25) PP.badge('combo25'); if(G.combo === 50) PP.badge('combo50');
     if(G.combo > 0 && G.combo % 20 === 0 && G.lives < 5){ G.lives++; G.floats.push({x:W / 2, y:gap * 2, txt:'+1 vida', life:1.4, col:cssVars().ok}); }
     if(G.hits % 10 === 0){ G.level++; G.banner = {t:1.4, txt:'Nivel ' + G.level}; }
@@ -183,7 +195,7 @@ EX['defiende'] = function(root){
     G.combo = 0; n.shake = .35; n.x -= gap * .8;
     G.misses[n.note.id] = (G.misses[n.note.id] || 0) + 1;
     if(el){ el.classList.add('wrong'); setTimeout(() => el.classList.remove('wrong'), 300); }
-    try{ PP.voice ? PP.voice(40, .18, 0, 'piano') : PP.click(0, false); }catch(e){}
+    try{ PP.voice ? PP.voice(40, .18, 0, 'piano') : PP.click(0, false); if(mode === 'voz') PP.markOut(0, .25); }catch(e){}
     hud();
   }
   function answerName(name, el){
@@ -224,9 +236,10 @@ EX['defiende'] = function(root){
     else $('[data-ov]', root).hidden = true;
   }
   $('[data-pause]', root).addEventListener('click', togglePause);
-  function toMenu(){ if(G){ G.over = true; } cancelAnimationFrame(raf); if(mode === 'violin') PP.mic.stop(); $('[data-game]', root).hidden = true; $('[data-menu]', root).hidden = false; paintMenu(); }
+  function stopVoice(){ if(G && G.stopVoz){ G.stopVoz(); G.stopVoz = null; } }
+  function toMenu(){ stopVoice(); if(G){ G.over = true; } cancelAnimationFrame(raf); if(mode === 'violin') PP.mic.stop(); $('[data-game]', root).hidden = true; $('[data-menu]', root).hidden = false; paintMenu(); }
   function gameOver(){
-    G.over = true; if(mode === 'violin') PP.mic.stop();
+    stopVoice(); G.over = true; if(mode === 'violin') PP.mic.stop();
     const stars = STAR_AT.filter(x => G.hits >= x).length, prev = G.startStars;
     if(G.score >= 1000) PP.badge('p1000'); if(G.score >= 5000) PP.badge('p5000');
     const best = PP.store.get('def-best', {}), key = world + mode, rec = G.score > (best[key] || 0); if(rec){ best[key] = G.score; PP.store.set('def-best', best); }
@@ -249,7 +262,7 @@ EX['defiende'] = function(root){
     const dt = Math.min(.05, (now - G.last) / 1000); G.last = now;
     if(!G.paused){
       G.t += dt;
-      const slow = mode === 'violin' ? 1.35 : mode === 'mastil' ? 1.25 : 1;
+      const slow = mode === 'violin' ? 1.35 : mode === 'voz' ? 1.25 : mode === 'mastil' ? 1.25 : 1;
       const cross = Math.max(3.1, 7.4 - G.level * .42) * slow, speed = (W - defX()) / cross;
       G.spawnIn -= dt;
       const alive = G.notes.filter(n => !n.dead).length;
@@ -326,13 +339,24 @@ EX['defiende'] = function(root){
     ctx.lineWidth = g * .3; ctx.beginPath(); ctx.moveTo(x - g * .55, y - g * .3); ctx.lineTo(x + g * .55, y - g * .55); ctx.moveTo(x - g * .55, y + g * .55); ctx.lineTo(x + g * .55, y + g * .3); ctx.stroke();
   }
   root._state = () => G;
+  /* Respuesta por voz: se compara con la nota marcada (la más cercana a la clave) */
+  function onVoice(seq){
+    if(!G || G.over || G.paused) return;
+    const r = PP.voz.classify(seq), el = $('[data-heard]', root), n = target();
+    if(!r || r.rejected){ if(el){ el.textContent = 'No te he entendido, repítelo'; el.className = 'heard'; } return; }
+    if(el){ el.textContent = 'Has dicho: ' + r.label; }
+    if(!n) return;
+    if(((n.note.m % 12) + 12) % 12 === r.pc){ if(el) el.className = 'heard ok'; hit(n); }
+    else { if(el) el.className = 'heard'; wrong(n); }
+  }
+  document.addEventListener('pp:voz', () => { if($('[data-menu]', root) && !$('[data-menu]', root).hidden) paintMenu(); });
   $('[data-start]', root).addEventListener('click', start);
   if('ResizeObserver' in window){ ro = new ResizeObserver(() => { if(G && !$('[data-game]', root).hidden){ const old = W; size(); if(G) G.notes.forEach(n => n.x *= W / old); if(G.paused || G.over) draw(); } }); ro.observe(root); }
   const vis = () => { if(document.hidden && G && !G.over && !G.paused) togglePause(); };
   document.addEventListener('visibilitychange', vis);
   const onSheet = () => { if(G && !G.over && !G.paused && document.contains(root)) togglePause(); };
   document.addEventListener('pp:chuleta', onSheet);
-  root._dispose = () => { document.removeEventListener('pp:chuleta', onSheet); if(G) G.over = true; cancelAnimationFrame(raf); if(ro) ro.disconnect(); document.removeEventListener('keydown', onKey); document.removeEventListener('visibilitychange', vis); if(mode === 'violin') PP.mic.stop(); };
+  root._dispose = () => { stopVoice(); document.removeEventListener('pp:chuleta', onSheet); if(G) G.over = true; cancelAnimationFrame(raf); if(ro) ro.disconnect(); document.removeEventListener('keydown', onKey); document.removeEventListener('visibilitychange', vis); if(mode === 'violin') PP.mic.stop(); };
   paintMenu();
 };
 
@@ -436,6 +460,7 @@ if(PP.TYPES && PP.TYPES.indexOf('Juegos') < 0) PP.TYPES.unshift('Juegos');
 if(PP.CATALOG){
   PP.CATALOG.push({m:5, id:'m5-defiende', t:'Defiende la clave', type:'Juegos', ex:'defiende', attrs:{}},
     {m:5, id:'m5-parejas', t:'Parejas', type:'Juegos', ex:'parejas', attrs:{}},
-    {m:8, id:'m8-defiende', t:'Defiende la clave en el mástil', type:'Juegos', ex:'defiende', attrs:{}});
+    {m:8, id:'m8-defiende', t:'Defiende la clave en el mástil', type:'Juegos', ex:'defiende', attrs:{}},
+    {m:5, id:'m5-voz', t:'Calibra tu voz para los juegos', type:'Juegos', ex:'voz-calibrar', attrs:{}});
 }
 })();

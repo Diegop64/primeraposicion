@@ -335,3 +335,8 @@ svg text{font-family:var(--f-display)}
 .listen-box .mic-meter{margin:0 auto}
 .heard{font-family:var(--f-display);font-size:1.5rem;font-weight:700;margin:0}
 .heard.ok{color:var(--ok)}
+/* Voz */
+.callout.privacy{border-color:var(--ok)}
+.voz-stage{display:grid;gap:8px;min-height:6em;align-content:start}
+.voz-word{font-family:var(--f-display);font-size:2rem;margin:0}
+.voz-word b{color:var(--re)}
