@@ -220,6 +220,7 @@ PP.staff = function(items, opts){
   const keyX = x; x += keyAcc.length * G * 1.1 + (keyAcc.length ? G * .6 : 0);
   const timeX = x; if(opts.time) x += G * 2.8;
   x += G * 1.2;
+  if(!keyAcc.length && !opts.time) x += G * .8;   // aire tras la clave cuando no hay armadura ni compás
   const x0 = x;
   // posiciones x
   const per = opts.time ? +opts.time.split('/')[0] : 0;

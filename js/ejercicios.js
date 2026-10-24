@@ -134,13 +134,26 @@ EX['asociacion'] = function(root){
     } else {
       $('[data-prompt]', root).innerHTML = `¿Dónde se escribe la nota marcada? Cuerda ${strTag(n.s)}, ${PP.fingerText(n)}.`;
       const ord = p.slice().sort((a, b) => a.m - b.m || a.d - b.d);
-      $('[data-staff]', root).innerHTML = PP.staff(ord.map(x => ({id:x.id, dur:'q'})), {G:10, spacing:36, clickable:true, hideAcc:false});
+      $('[data-staff]', root).innerHTML = PP.staff(ord.map(x => ({id:x.id, dur:'q'})), {G:10, spacing:54, clickable:true, hideAcc:false});
       root.querySelectorAll('[data-staff] .nh').forEach(e => e.style.opacity = '.35');
       PP.bindStaff($('[data-staff]', root), g => pickStaff(g));
       board.mark(n.id, `var(--${PP.STRING_CLASS[n.s]})`);
     }
   }
+  // nombre de la nota, pequeño, al lado de la nota del pentagrama (verde oscuro si aciertas, rojo oscuro si no)
+  function tag(g, n, ok){
+    const h = g && g.querySelector('.nh'); if(!h) return;
+    const old = g.querySelector('.note-tag'); if(old) old.remove();
+    const cx = +h.getAttribute('cx'), cy = +h.getAttribute('cy'), rx = +h.getAttribute('rx'), G = rx / .66;
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('class', 'note-tag ' + (ok ? 'ok' : 'bad'));
+    t.setAttribute('x', cx + rx + G * (mode === 1 ? .5 : .3)); t.setAttribute('y', cy + G * .4);
+    t.setAttribute('font-size', G * (mode === 1 ? 1.15 : .95)); t.setAttribute('font-weight', '700');
+    t.textContent = PP.name(n); g.appendChild(t);
+  }
+  const staffNote = id => $(`[data-staff] [data-id="${id}"]`, root);
   function result(right, clicked){
+    if(mode === 1) tag(staffNote(target.id), target, right);
     if(right){ sc.hit(root); done = true; PP.play(target.m, .9);
       $('[data-fb]', root).innerHTML = `<span class="ok">Eso es.</span> ${PP.name(target)}: cuerda ${strTag(target.s)}, ${PP.fingerText(target)}.`;
       setTimeout(() => { if(done) next(); }, 1500); }
@@ -148,7 +161,7 @@ EX['asociacion'] = function(root){
       $('[data-fb]', root).innerHTML = `<span class="bad">Esa es ${PP.name(clicked)}</span> (cuerda ${strTag(clicked.s)}, ${PP.fingerText(clicked)}). Prueba otra vez.`; }
   }
   function pickBoard(n){ if(mode !== 1 || done) return; const r = n.id === target.id || (n.m === target.m && n.d === target.d); board.mark(n.id, r ? 'var(--ok)' : 'var(--bad)'); result(r, n); }
-  function pickStaff(g){ if(mode !== 2 || done) return; const n = PP.NOTES[g.dataset.id], r = n.m === target.m && n.d === target.d; const h = g.querySelector('.nh'); h.style.opacity = '1'; h.style.fill = r ? 'var(--ok)' : 'var(--bad)'; result(r, n); }
+  function pickStaff(g){ if(mode !== 2 || done) return; const n = PP.NOTES[g.dataset.id], r = n.m === target.m && n.d === target.d; const h = g.querySelector('.nh'); h.style.opacity = '1'; h.style.fill = r ? 'var(--ok)' : 'var(--bad)'; tag(g, n, r); result(r, n); }
   root.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { mode = +b.dataset.mode; seg('[data-mode]', 'mode', mode); next(); }));
   root.querySelectorAll('[data-pool]').forEach(b => b.addEventListener('click', () => { poolKey = b.dataset.pool; seg('[data-pool]', 'pool', poolKey); next(); }));
   $('[data-next]', root).addEventListener('click', next);
@@ -157,6 +170,7 @@ EX['asociacion'] = function(root){
     if(!target) return; done = true; PP.play(target.m, 1); sc.miss(root);
     if(mode === 1) board.mark(target.id, 'var(--ok)');
     else { const h = $(`[data-staff] [data-id="${target.id}"] .nh`, root); if(h){ h.style.opacity = '1'; h.style.fill = 'var(--ok)'; } }
+    tag(staffNote(target.id), target, true);
     $('[data-fb]', root).innerHTML = `Es ${PP.name(target)}: cuerda ${strTag(target.s)}, ${PP.fingerText(target)}.`;
   });
   seg('[data-mode]', 'mode', 1); seg('[data-pool]', 'pool', poolKey);

@@ -17,6 +17,7 @@
   --page:#eff1ee; --paper:#ffffff; --ink:#15171a; --muted:#596069; --rule:#d6dad5; --soft:#e6e9e4;
   --sol:#2f7a4d; --re:#2b5ea7; --la:#b8620e; --mi:#b42d3c;
   --sol-bg:#e3f0e7; --re-bg:#e2eaf6; --la-bg:#f7eadb; --mi-bg:#f6e1e3;
+  --tag-ok:#1c5434; --tag-bad:#8c1f2b;
   --ok:#2f7a4d; --ok-bg:#e3f0e7; --bad:#b42d3c; --bad-bg:#f6e1e3;
   --ebony:#1c1a18; --ebony-ink:#efe9de; --gut:#cdb489;
   --f-display:"Bricolage","Avenir Next","Segoe UI",system-ui,sans-serif;
@@ -30,6 +31,7 @@
   --page:#121413; --paper:#1a1d1c; --ink:#eceee9; --muted:#a1a8a4; --rule:#303532; --soft:#232725;
   --sol:#6cc493; --re:#7fa8ea; --la:#eaa45a; --mi:#ef7f8c;
   --sol-bg:#183225; --re-bg:#18263c; --la-bg:#3a2813; --mi-bg:#3c1b20;
+  --tag-ok:#8fd9ae; --tag-bad:#f4a3ad;
   --ok:#6cc493; --ok-bg:#183225; --bad:#ef7f8c; --bad-bg:#3c1b20;
   --ebony:#0b0b0a; --ebony-ink:#efe9de; --gut:#b49a6b; color-scheme:dark}}
 
@@ -355,3 +357,8 @@ svg text{font-family:var(--f-display)}
 .sheet-signs summary{cursor:pointer;font-weight:700}
 .signs-quiz .big-sign{display:grid;place-items:center;min-height:120px}
 .signs-quiz .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+
+.staff-svg .note-tag.ok{fill:var(--tag-ok)}
+.staff-svg .note-tag.bad{fill:var(--tag-bad)}
+.staff-svg .hit:focus{outline:none}
+.staff-svg .hit:focus-visible{outline:2px solid var(--la);outline-offset:2px}
