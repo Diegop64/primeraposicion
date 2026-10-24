@@ -26,9 +26,28 @@ El progreso (objetivos, récords, estrellas, insignias) se guarda en el `localSt
 | `js/practica.js` | Cancionero, ejercicios añadidos y panel de práctica |
 | `js/oido.js` | Módulo 13: entrenamiento auditivo |
 | `js/juegos.js` | Juegos e insignias |
+| `js/version.js` | Número de versión y novedades (lo genera `herramientas-dev/nueva_version.py`) |
 | `js/voz.js` | Respuestas con la voz en los juegos. Reconocimiento 100 % local en el navegador: no graba ni envía audio; solo guarda (si lo permites) unos números de calibración |
 | `fonts/` | Bricolage Grotesque, Atkinson Hyperlegible y Noto Music (licencia SIL OFL) |
 | `herramientas-dev/generar_modulos.py` | Genera las páginas de módulo |
+
+## Versiones
+
+La versión actual se ve en la esquina inferior izquierda de todas las páginas; al pulsarla aparecen las novedades. El historial completo está en `CHANGELOG.md`.
+
+Los números siguen el formato `mayor.menor.parche`:
+
+- **parche** (1.5.0 → 1.5.1): arreglos pequeños.
+- **menor** (1.5.0 → 1.6.0): algo nuevo, como un ejercicio o un juego.
+- **mayor** (1.5.0 → 2.0.0): un cambio grande en toda la web.
+
+Para publicar una versión nueva, desde esta carpeta:
+
+```
+python herramientas-dev/nueva_version.py menor "Qué cambia" "Otro cambio"
+```
+
+El script sube el número, apunta los cambios con la fecha en `herramientas-dev/versiones.json` y `CHANGELOG.md`, regenera `js/version.js` y pone `?v=X.Y.Z` en todas las páginas para que los navegadores descarguen los archivos nuevos. Si añades `--git` al final, hace también el commit y la etiqueta `vX.Y.Z`. Después, súbelo con GitHub Desktop.
 
 ## Editar las lecciones
 

@@ -290,6 +290,29 @@ PP.LEVELS = [
   {n:2, t:'Leer y colocar los dedos', d:'El pentagrama, el ritmo y el mapa completo de la primera posición con el dedo 2 alto.'},
   {n:3, t:'Tocar música', d:'Escalas, el dedo 2 bajo, el cuarto dedo, corcheas y tus primeras piezas leídas.'}
 ];
+/* ---------- Versión (js/version.js, generado por herramientas-dev/nueva_version.py) ---------- */
+PP.VERSION = window.PP_VERSION || null;
+PP.fechaLarga = iso => { const [y, m, d] = iso.split('-').map(Number); return d + ' de ' + ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][m - 1] + ' de ' + y; };
+function versionBadge(){
+  const V = PP.VERSION; if(!V || document.querySelector('[data-ver]')) return;
+  const seen = PP.store.get('version-vista', null), isNew = seen && seen !== V.version;
+  const box = document.createElement('div'); box.className = 'ver-corner'; box.dataset.ver = '';
+  box.innerHTML = `<button type="button" class="ver-badge${isNew ? ' new' : ''}" aria-expanded="false" aria-controls="verPanel" title="Novedades de esta versión">v${V.version}${isNew ? ' · nuevo' : ''}</button>
+    <div class="ver-panel" id="verPanel" role="dialog" aria-label="Novedades" hidden>
+      <div class="row between"><b>Novedades</b><button type="button" class="btn small" data-ver-close>Cerrar</button></div>
+      ${V.historial.map(h => `<section><p class="small"><b>Versión ${h.version}</b> <span class="muted">· ${PP.fechaLarga(h.fecha)}</span></p><ul>${h.cambios.map(c => `<li>${c}</li>`).join('')}</ul></section>`).join('')}
+    </div>`;
+  document.body.appendChild(box);
+  const btn = box.querySelector('.ver-badge'), panel = box.querySelector('.ver-panel');
+  const set = open => { panel.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+    if(open){ PP.store.set('version-vista', V.version); btn.classList.remove('new'); btn.textContent = 'v' + V.version; } };
+  btn.addEventListener('click', () => set(panel.hidden));
+  box.querySelector('[data-ver-close]').addEventListener('click', () => { set(false); btn.focus(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && !panel.hidden){ set(false); btn.focus(); } });
+  document.addEventListener('click', e => { if(!panel.hidden && !box.contains(e.target)) set(false); });
+  if(!seen) PP.store.set('version-vista', V.version);
+}
+
 PP.MODULES = [
   {n:1, lv:1, t:'Conoce tu violín', d:'Partes del violín y del arco, cuidados y afinación', goals:[
     'Sé nombrar voluta, clavijas, diapasón, puente, cordal, mentonera y tensores',
@@ -385,11 +408,13 @@ PP.chrome = function(){
     document.querySelectorAll('[data-mute]').forEach(b => b.addEventListener('click', () => { const m = !PP.store.get('mudo', false); if(!m && PP.store.get('volumen', 0.8) === 0) PP.store.set('volumen', 0.6); PP.setVolume(null, m); if(!m) PP.pluck(69); }));
     PP.setVolume();
   }
+  versionBadge();
   const f = document.querySelector('[data-footer]');
   if(f){
     f.outerHTML = `<footer class="site-foot"><div class="wrap">
       <p>Primera Posición. Un curso de violín para empezar desde cero.</p>
       <p>Tu progreso se guarda solo en este navegador. <button class="btn small" id="resetAll" type="button">Borrar mi progreso</button></p>
+      ${PP.VERSION ? `<p class="small muted">Versión ${PP.VERSION.version}, ${PP.fechaLarga(PP.VERSION.fecha)}.</p>` : ''}
     </div></footer>`;
     const r = document.getElementById('resetAll');
     if(r){

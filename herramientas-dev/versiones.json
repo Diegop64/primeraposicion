@@ -1,0 +1,50 @@
+{
+  "version": "1.5.0",
+  "historial": [
+    {
+      "version": "1.5.0",
+      "fecha": "2026-10-24",
+      "cambios": [
+        "Sistema de versiones: el número de versión aparece en una esquina de todas las páginas y, al pulsarlo, se ven las novedades."
+      ]
+    },
+    {
+      "version": "1.4.0",
+      "fecha": "2026-10-24",
+      "cambios": [
+        "La asociación entre pentagrama y mástil también está en Juegos, con todas las notas.",
+        "Al responder, la nota del pentagrama muestra su nombre en verde oscuro si aciertas o en rojo oscuro si fallas."
+      ]
+    },
+    {
+      "version": "1.3.0",
+      "fecha": "2026-10-24",
+      "cambios": [
+        "Signos del violín en las partituras: arco abajo y arriba, levantar el arco, ligaduras, staccato, acentos, calderón, matices, reguladores y parte del arco.",
+        "Leyenda de signos en cada partitura y botón para ocultar los arcos.",
+        "Lección y ejercicio «Los signos del violín» en el módulo 11, y tabla de signos en la chuleta."
+      ]
+    },
+    {
+      "version": "1.2.0",
+      "fecha": "2026-10-22",
+      "cambios": [
+        "Responder con la voz en Defiende la clave («sol», «la», «fa sostenido»...). El reconocimiento funciona solo en tu navegador: no se graba ni se envía nada."
+      ]
+    },
+    {
+      "version": "1.1.0",
+      "fecha": "2026-10-19",
+      "cambios": [
+        "Reconocimiento de notas por micrófono mucho más rápido y fiable."
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "fecha": "2026-10-18",
+      "cambios": [
+        "Primera versión: 13 módulos con ejercicios, panel de práctica, juegos de notas, chuleta del mástil, afinador y metrónomo."
+      ]
+    }
+  ]
+}

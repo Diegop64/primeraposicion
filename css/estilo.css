@@ -362,3 +362,14 @@ svg text{font-family:var(--f-display)}
 .staff-svg .note-tag.bad{fill:var(--tag-bad)}
 .staff-svg .hit:focus{outline:none}
 .staff-svg .hit:focus-visible{outline:2px solid var(--la);outline-offset:2px}
+
+/* Versión en la esquina */
+.ver-corner{position:fixed;left:max(10px,env(safe-area-inset-left));bottom:max(10px,env(safe-area-inset-bottom));z-index:30}
+.ver-badge{font:inherit;font-size:.74rem;font-weight:700;letter-spacing:.02em;color:var(--muted);background:var(--paper);border:1px solid var(--rule);border-radius:999px;padding:4px 10px;cursor:pointer;opacity:.85;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.ver-badge:hover,.ver-badge[aria-expanded="true"]{opacity:1;color:var(--ink);border-color:var(--ink)}
+.ver-badge.new{color:var(--ok);border-color:var(--ok);opacity:1}
+.ver-panel{position:absolute;left:0;bottom:calc(100% + 8px);width:min(360px,calc(100vw - 20px));max-height:min(60vh,460px);overflow:auto;background:var(--paper);border:1px solid var(--rule);border-radius:14px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:grid;gap:8px}
+.ver-panel ul{margin:2px 0 0;padding-left:18px;font-size:.9rem}
+.ver-panel section+section{border-top:1px solid var(--rule);padding-top:8px}
+.ver-panel p{margin:0}
+@media print{.ver-corner{display:none}}

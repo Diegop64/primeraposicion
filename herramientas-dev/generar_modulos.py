@@ -15,6 +15,7 @@ HEAD = '''<!doctype html>
 <div data-header></div>
 '''
 FOOT = '''<div data-footer></div>
+<script src="js/version.js?v=__V__"></script>
 <script src="js/nucleo.js?v=__V__"></script>
 <script src="js/notacion.js?v=__V__"></script>
 <script src="js/ejercicios.js?v=__V__"></script>
@@ -476,8 +477,9 @@ open(os.path.join(OUT, 'como-estudiar.html'), 'w').write(est)
 print('ok', len(MODS))
 
 # Versión de los archivos para que el navegador no use copias antiguas
-import time, glob
-VER = time.strftime('%Y%m%d%H%M')
+import json, glob
+# el número de versión vive en herramientas-dev/versiones.json (ver nueva_version.py)
+VER = json.load(open(os.path.join(OUT, 'herramientas-dev', 'versiones.json'), encoding='utf-8'))['version']
 for f in glob.glob(os.path.join(OUT, '*.html')):
     t = open(f).read()
     if '__V__' in t: open(f, 'w').write(t.replace('__V__', VER))
