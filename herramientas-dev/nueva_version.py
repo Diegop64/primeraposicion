@@ -6,7 +6,7 @@ Uso (desde la carpeta de la web):
     python herramientas-dev/nueva_version.py mayor "Cambio grande"
     python herramientas-dev/nueva_version.py --solo-aplicar      (regenera los archivos sin subir la versión)
 
-Añade --git al final para hacer también el commit y la etiqueta vX.Y.Z.
+Añade --git al final para hacer también el commit.
 
 Qué hace:
   1. Sube el número de versión (mayor.menor.parche) en herramientas-dev/versiones.json
@@ -71,8 +71,7 @@ def main(args):
     if git:
         subprocess.run(['git', 'add', '-A'], cwd=RAIZ, check=True)
         subprocess.run(['git', 'commit', '-m', f'Versión {nueva}: ' + args[1]], cwd=RAIZ, check=True)
-        subprocess.run(['git', 'tag', f'v{nueva}'], cwd=RAIZ, check=True)
-        print(f'Commit y etiqueta v{nueva} creados. Súbelos con GitHub Desktop (Push origin).')
+        print(f'Commit de la versión {nueva} creado. Súbelo con GitHub Desktop (Push origin).')
 
 
 if __name__ == '__main__':

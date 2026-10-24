@@ -47,7 +47,7 @@ Para publicar una versión nueva, desde esta carpeta:
 python herramientas-dev/nueva_version.py menor "Qué cambia" "Otro cambio"
 ```
 
-El script sube el número, apunta los cambios con la fecha en `herramientas-dev/versiones.json` y `CHANGELOG.md`, regenera `js/version.js` y pone `?v=X.Y.Z` en todas las páginas para que los navegadores descarguen los archivos nuevos. Si añades `--git` al final, hace también el commit y la etiqueta `vX.Y.Z`. Después, súbelo con GitHub Desktop.
+El script sube el número, apunta los cambios con la fecha en `herramientas-dev/versiones.json` y `CHANGELOG.md`, regenera `js/version.js` y pone `?v=X.Y.Z` en todas las páginas para que los navegadores descarguen los archivos nuevos. Si añades `--git` al final, hace también el commit. La versión se sube cada vez que se publica (antes de cada push); no se usan etiquetas de git. Después, súbelo con GitHub Desktop.
 
 ## Editar las lecciones
 
