@@ -1,5 +1,9 @@
 # Novedades de Primera Posición
 
+## 1.5.1 (2026-10-24)
+
+- Ajustes del sistema de versiones: la versión sube cada vez que se publica la web.
+
 ## 1.5.0 (2026-10-24)
 
 - Sistema de versiones: el número de versión aparece en una esquina de todas las páginas y, al pulsarlo, se ven las novedades.

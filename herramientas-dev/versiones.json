@@ -1,6 +1,13 @@
 {
-  "version": "1.5.0",
+  "version": "1.5.1",
   "historial": [
+    {
+      "version": "1.5.1",
+      "fecha": "2026-10-24",
+      "cambios": [
+        "Ajustes del sistema de versiones: la versión sube cada vez que se publica la web."
+      ]
+    },
     {
       "version": "1.5.0",
       "fecha": "2026-10-24",
