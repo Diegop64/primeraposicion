@@ -340,3 +340,18 @@ svg text{font-family:var(--f-display)}
 .voz-stage{display:grid;gap:8px;min-height:6em;align-content:start}
 .voz-word{font-family:var(--f-display);font-size:2rem;margin:0}
 .voz-word b{color:var(--re)}
+
+/* Signos del arco y de expresión */
+.sign-legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.sign-chip{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:999px;padding:2px 10px 2px 4px;font:inherit;font-size:.86rem;cursor:pointer;min-height:32px}
+.sign-chip:hover{border-color:var(--ink)}
+.sign-chip[aria-expanded="true"]{background:var(--la-bg);border-color:var(--la)}
+.sign-desc{margin:6px 0 0;max-width:68ch}
+.sign-ico{flex:none;display:block}
+.sign-table{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px 18px;margin-top:10px}
+.sign-row{display:flex;gap:10px;align-items:flex-start}
+.sign-row>div{display:grid;gap:2px}
+.sheet-signs{border-top:1px solid var(--rule);padding-top:10px}
+.sheet-signs summary{cursor:pointer;font-weight:700}
+.signs-quiz .big-sign{display:grid;place-items:center;min-height:120px}
+.signs-quiz .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}

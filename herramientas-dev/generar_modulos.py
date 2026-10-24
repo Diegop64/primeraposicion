@@ -181,6 +181,7 @@ MODS[4] = dict(title='Primer sonido', lead='Sacar un sonido limpio es cuestión 
    '<ul><li><b>Arco abajo</b> (símbolo ⊓): del talón a la punta. El antebrazo se abre y, al llegar a la punta, se adelanta un poco.</li><li><b>Arco arriba</b> (símbolo V): de la punta al talón. El brazo se cierra.</li><li>Practica frente a un espejo, mirando que el arco no se vaya hacia el diapasón.</li><li>Empieza con arcos cortos en la mitad del arco y alárgalos poco a poco.</li></ul>')),
  ('cambio', 'Cambiar de cuerda', prose('Cambiar de cuerda es cambiar la altura del codo derecho. Antes de mover el arco, busca la altura exacta de cada cuerda con el arco quieto.') + ELBOW_SVG),
  ('practica', 'Ejercicios en cuerdas al aire', prose('Toca con el metrónomo a 60, cuatro pulsos por arco en las redondas. Cuenta en voz alta. Las notas debajo del pentagrama son el dedo: 0 significa cuerda al aire.') +
+   prose('Encima de cada nota verás el signo del arco: <b>⊓</b> arco abajo y <b>V</b> arco arriba. Las letras pequeñas dicen qué parte del arco usar: <b>T.A.</b> todo el arco, <b>M.S.</b> mitad superior, <b>M.</b> el centro. Debajo del pentagrama, <i>mf</i> es el matiz: medio fuerte. Pulsa cualquier signo de la leyenda para ver qué significa.') +
    ex('partitura', song='aire-1') + ex('partitura', song='aire-2') +
    call('Cómo saber si está bien', 'Grábate con el móvil y escucha. Un buen sonido en cuerda al aire es parejo de principio a fin del arco, sin chirridos al cambiar de dirección y sin que suene la cuerda de al lado.', 'teacher'))
 ])
@@ -320,6 +321,11 @@ MODS[11] = dict(title='Corcheas y arcos', lead='Partir el pulso en dos y control
    '<b>Ligado:</b> una línea curva sobre o bajo varias notas indica que se tocan en el mismo arco. La mano izquierda cambia de dedo y el arco sigue sin parar.',
    'En los ligados hay que repartir el arco: si ligas dos negras, cada una usa la mitad de lo que usarías para una sola.') +
    ex('partitura', song='ligados') + ex('partitura', song='corcheas')),
+ ('signos', 'Los signos del arco y la expresión', prose(
+   'Las partituras de violín llevan, además de las notas, instrucciones para el arco y para la expresión. En todas las partituras de esta web aparecen encima de las notas, y puedes ocultarlas con el botón <b>Arcos</b>.',
+   '<ul><li><b>La regla básica:</b> una nota por arco, alternando abajo y arriba. Las notas bajo una ligadura comparten un solo arco.</li><li><b>Parte fuerte, arco abajo:</b> el primer pulso del compás suele empezar arco abajo. Después de un silencio se vuelve a empezar abajo.</li><li><b>La coma</b> encima del pentagrama significa levantar el arco y volver al talón, para empezar otra vez arco abajo.</li><li><b>Los matices</b> (<i>p</i>, <i>mf</i>, <i>f</i>...) se hacen con el arco: más fuerte es más peso, más velocidad y el arco más cerca del puente.</li></ul>') +
+   ex('signos') + ex('partitura', song='signos') +
+   call('Primero el arco solo', 'Antes de tocar una pieza nueva, toca su ritmo en una cuerda al aire siguiendo solo los signos de arco. Cuando el brazo derecho ya sabe el camino, añade la mano izquierda.', 'teacher')),
  ('piezas', 'Piezas con corcheas y puntillo', ex('partitura', song='martinillo') + ex('partitura', song='oda'))
 ])
 

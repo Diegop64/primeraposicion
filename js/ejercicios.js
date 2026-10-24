@@ -368,15 +368,10 @@ EX['lab-sonido'] = function(root){
 };
 
 /* ---------- 8. Partituras que suenan ---------- */
-const S = PP.parseSong = (str) => str.trim().split(/\s+/).map(tok => {
-  // formato: nota:duración  (r = silencio, ~ = ligado con la siguiente)
-  const slur = tok.endsWith('~'); if(slur) tok = tok.slice(0, -1);
-  const [id, dur] = tok.split(':');
-  return id === 'r' ? {rest:true, dur:dur || 'q'} : {id, dur:dur || 'q', slur};
-});
+const S = PP.parseSong;
 PP.SONGS = {
-  'aire-1': {t:'Cuerdas al aire en negras', key:'Do', time:'4/4', bpm:60, notes:S('A4 A4 A4 A4 E5 E5 E5 E5 A4 A4 A4 A4 D4 D4 D4 D4 G3 G3 G3 G3 D4 D4 D4 D4 A4 A4 E5 E5 A4:w')},
-  'aire-2': {t:'Blancas, redondas y cambios de cuerda', key:'Do', time:'4/4', bpm:60, notes:S('A4:h E5:h A4:h D4:h G3:h D4:h A4:w E5:q E5:q A4:h D4:q D4:q G3:h D4:h A4:h A4:w')},
+  'aire-1': {t:'Cuerdas al aire en negras', key:'Do', time:'4/4', bpm:60, notes:S('A4,mf,M A4 A4 A4 E5 E5 E5 E5 A4 A4 A4 A4 D4 D4 D4 D4 G3 G3 G3 G3 D4 D4 D4 D4 A4 A4 E5 E5 A4:w')},
+  'aire-2': {t:'Blancas, redondas y cambios de cuerda', key:'Do', time:'4/4', bpm:60, notes:S('A4:h,MS E5:h A4:h D4:h G3:h D4:h A4:w,TA E5:q,M E5:q A4:h D4:q D4:q G3:h D4:h A4:h A4:w')},
   'aire-3': {t:'Silencios: el arco se para', key:'Do', time:'4/4', bpm:66, notes:S('A4 r A4 r E5 E5 E5 r D4 r D4 r G3 G3 G3 r A4 A4 E5 E5 D4 D4 A4 r')},
   'dedos-la': {t:'Dedos 1 y 2 en la cuerda La', key:'La', time:'4/4', bpm:60, notes:S('A4 B4 A4 B4 A4 B4 Cs5:h A4 B4 Cs5 B4 A4:h r:h Cs5 B4 Cs5 D5 Cs5 B4 A4:h')},
   'dedos-mi': {t:'Dedos 1, 2 y 3 en la cuerda Mi', key:'La', time:'4/4', bpm:60, notes:S('E5 Fs5 Gs5 A5 Gs5 Fs5 E5:h E5 Fs5 E5 Fs5 Gs5:h r:h Gs5 A5 Gs5 Fs5 E5:w')},
@@ -388,26 +383,29 @@ PP.SONGS = {
   'dedo2-bajo': {t:'Dedo 2 bajo en La y Mi', key:'Sol', time:'4/4', bpm:60, notes:S('A4 B4 C5 B4 A4 B4 C5:h E5 Fs5 G5 Fs5 E5 Fs5 G5:h A4 B4 C5 D5 E5 Fs5 G5 A5 G5 Fs5 E5 D5 C5 B4 A4:h')},
   'alto-bajo': {t:'Alto o bajo: Do♯ y Do', key:'Re', time:'4/4', bpm:56, notes:S('A4 B4 Cs5 D5 A4 B4 C5 D5 E5 Fs5 G5 A5 E5 Fs5 Gs5 A5 A4:w')},
   'cuarto-dedo': {t:'Cuarto dedo: compara con la cuerda al aire', key:'Re', time:'4/4', bpm:56, notes:S('D4 E4 Fs4 G4 A4f:h A4:h A4 B4 Cs5 D5 E5f:h E5:h G3 A3 B3 C4 D4f:h D4:h')},
-  'corcheas': {t:'Corcheas en cuerdas al aire y dedos', key:'La', time:'4/4', bpm:60, notes:S('A4:e A4:e A4:e A4:e A4:h E5:e E5:e E5:e E5:e E5:h A4:e B4:e Cs5:e D5:e E5 E5 D5:e Cs5:e B4:e Cs5:e A4:h')},
+  'corcheas': {t:'Corcheas en cuerdas al aire y dedos', key:'La', time:'4/4', bpm:60, notes:S('A4:e,M A4:e A4:e A4:e A4:h E5:e E5:e E5:e E5:e E5:h A4:e B4:e Cs5:e D5:e E5 E5 D5:e Cs5:e B4:e Cs5:e A4:h')},
   'ligados': {t:'Détaché y ligado de dos notas', key:'La', time:'4/4', bpm:56, notes:S('A4 B4 Cs5 D5 A4~ B4 Cs5~ D5 E5~ Fs5 Gs5~ A5 A5~ Gs5 Fs5~ E5 D5~ Cs5 B4~ A4')},
   'puntillo': {t:'Negra con puntillo y corchea', key:'Re', time:'4/4', bpm:60, notes:S('D4:qd E4:e Fs4:h Fs4:qd G4:e A4:h A4:qd G4:e Fs4 E4 D4:hd r')},
-  'estrellita': {t:'Estrellita', key:'La', time:'4/4', bpm:80, notes:S('A4 A4 E5 E5 Fs5 Fs5 E5:h D5 D5 Cs5 Cs5 B4 B4 A4:h E5 E5 D5 D5 Cs5 Cs5 B4:h E5 E5 D5 D5 Cs5 Cs5 B4:h A4 A4 E5 E5 Fs5 Fs5 E5:h D5 D5 Cs5 Cs5 B4 B4 A4:h')},
-  'oda': {t:'Oda a la alegría (Beethoven)', key:'Re', time:'4/4', bpm:84, notes:S('Fs4 Fs4 G4 A4 A4 G4 Fs4 E4 D4 D4 E4 Fs4 Fs4:qd E4:e E4:h Fs4 Fs4 G4 A4 A4 G4 Fs4 E4 D4 D4 E4 Fs4 E4:qd D4:e D4:h E4 E4 Fs4 D4 E4 Fs4:e G4:e Fs4 D4 E4 Fs4:e G4:e Fs4 E4 D4 E4 A3:h Fs4 Fs4 G4 A4 A4 G4 Fs4 E4 D4 D4 E4 Fs4 E4:qd D4:e D4:h')},
-  'martinillo': {t:'Martinillo (Frère Jacques)', key:'Re', time:'4/4', bpm:84, notes:S('D4 E4 Fs4 D4 D4 E4 Fs4 D4 Fs4 G4 A4:h Fs4 G4 A4:h A4:e B4:e A4:e G4:e Fs4 D4 A4:e B4:e A4:e G4:e Fs4 D4 D4 A3 D4:h D4 A3 D4:h')},
+  'estrellita': {t:'Estrellita', key:'La', time:'4/4', bpm:80, notes:S('A4,mf A4 E5 E5 Fs5 Fs5 E5:h D5 D5 Cs5 Cs5 B4 B4 A4:h E5,p E5 D5 D5 Cs5 Cs5 B4:h E5,cresc E5 D5 D5 Cs5 Cs5 B4:h,end A4,mf A4 E5 E5 Fs5 Fs5 E5:h D5,dim D5 Cs5 Cs5 B4 B4 A4:h,end')},
+  'oda': {t:'Oda a la alegría (Beethoven)', key:'Re', time:'4/4', bpm:84, notes:S('Fs4,mf Fs4 G4 A4 A4 G4 Fs4 E4 D4 D4 E4 Fs4 Fs4:qd E4:e E4:h Fs4 Fs4 G4 A4 A4 G4 Fs4 E4 D4 D4 E4 Fs4 E4:qd D4:e D4:h E4,p,cresc E4 Fs4 D4 E4 Fs4:e~ G4:e Fs4 D4 E4 Fs4:e~ G4:e Fs4 E4 D4 E4 A3:h,end Fs4,f Fs4 G4 A4 A4 G4 Fs4 E4 D4 D4 E4 Fs4 E4:qd D4:e D4:h')},
+  'martinillo': {t:'Martinillo (Frère Jacques)', key:'Re', time:'4/4', bpm:84, notes:S('D4,mf E4 Fs4 D4 D4 E4 Fs4 D4 Fs4 G4 A4:h Fs4 G4 A4:h A4:e B4:e A4:e G4:e Fs4 D4 A4:e B4:e A4:e G4:e Fs4 D4 D4 A3 D4:h D4 A3 D4:h')},
   'clair': {t:'Au clair de la lune', key:'Re', time:'4/4', bpm:80, notes:S('D4 D4 D4 E4 Fs4:h E4:h D4 Fs4 E4 E4 D4:w D4 D4 D4 E4 Fs4:h E4:h D4 Fs4 E4 E4 D4:w E4 E4 E4 E4 B3:h B3:h E4 D4 Cs4 B3 A3:w D4 D4 D4 E4 Fs4:h E4:h D4 Fs4 E4 E4 D4:w')}
 };
 // Do♯4 en la cuerda Sol (dedo 3 alto) para Au clair de la lune
 
 EX['partitura'] = function(root){
   const songId = root.dataset.song, song = PP.SONGS[songId]; if(!song) return;
-  let bpm = +(root.dataset.bpm || song.bpm), names = root.dataset.names === '1', fingers = root.dataset.fingers !== '0', playing = null, follow = null;
+  PP.bowing(song.notes, song.time, song.pickup);
+  const expr = PP.expression(song.notes);
+  let bpm = +(root.dataset.bpm || song.bpm), names = root.dataset.names === '1', fingers = root.dataset.fingers !== '0', bows = PP.store.get('ver-arcos', true), playing = null, follow = null;
   const nt = namesToggle(() => draw());
   const st0 = PP.stat.get('pieza:' + songId);
   root.innerHTML = `<div class="ex-head"><h3>${root.dataset.title || song.t}</h3><span class="ex-kind">${song.key !== 'Do' ? (song.key + ' mayor, ') : ''}compás ${song.time}</span></div>
     <div class="row between"><div class="row"><button class="btn primary" data-play type="button">Escuchar</button><button class="btn" data-along type="button">Tocar con metrónomo</button><button class="btn" data-follow type="button">Seguir con micrófono</button></div>
       <label class="field" style="min-width:190px">Velocidad: <span><b data-bv>${bpm}</b> pulsos por minuto</span><input type="range" min="40" max="132" step="2" value="${bpm}" data-bpm></label></div>
-    <div class="row"><div class="seg" role="group" aria-label="Ayudas"><button type="button" data-tg="names">Nombres</button><button type="button" data-tg="fingers">Dedos</button></div>${nt.html}</div>
+    <div class="row"><div class="seg" role="group" aria-label="Ayudas"><button type="button" data-tg="names">Nombres</button><button type="button" data-tg="fingers">Dedos</button><button type="button" data-tg="bows" title="Arco abajo y arco arriba">Arcos</button></div>${nt.html}</div>
     <div data-lines style="display:grid;gap:6px"></div>
+    <div data-legend></div>
     <p class="small muted" data-msg>Pulsa cualquier nota para oírla sola. Los números de debajo son los dedos, en el color de su cuerda.</p>
     <div class="follow-box" data-fbox hidden><div class="row between"><p class="heard" data-fheard>Escuchando...</p><button class="btn small" type="button" data-skip>Saltar esta nota</button></div>${PP.meterHTML()}</div>
     <p class="best" data-pstat>${st0.ok ? `Completada con el micrófono ${st0.ok} ${st0.ok === 1 ? 'vez' : 'veces'}.` : ''}</p>`;
@@ -422,12 +420,13 @@ EX['partitura'] = function(root){
     const box = $('[data-lines]', root); box.innerHTML = '';
     lines.forEach((ln, k) => {
       const d = document.createElement('div'); d.className = 'scroll';
-      d.innerHTML = PP.staff(song.notes.slice(ln.start, ln.end), {G:10, spacing:40, key:song.key, time:k === 0 ? song.time : null, names, fingers, clickable:true, final:k === lines.length - 1});
+      d.innerHTML = PP.staff(song.notes.slice(ln.start, ln.end), {G:10, spacing:40, key:song.key, time:k === 0 ? song.time : null, names, fingers, bows, clickable:true, final:k === lines.length - 1});
       d.querySelectorAll('[data-i]').forEach(g => g.dataset.i = +g.dataset.i + ln.start);
       PP.bindStaff(d, g => { const n = PP.NOTES[g.dataset.id]; PP.play(n.m, .8); hl(+g.dataset.i); });
       box.appendChild(d);
     });
-    root.querySelectorAll('[data-tg]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tg === 'names' ? names : fingers)));
+    root.querySelectorAll('[data-tg]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tg === 'names' ? names : b.dataset.tg === 'bows' ? bows : fingers)));
+    PP.signLegend($('[data-legend]', root), song.notes, bows);
     if(follow) for(let k = 0; k < follow.i; k++) paintDone(k);
   }
   const hl = i => root.querySelectorAll('[data-lines] [data-i]').forEach(g => g.classList.toggle('on', +g.dataset.i === i));
@@ -449,14 +448,16 @@ EX['partitura'] = function(root){
     }
     song.notes.forEach((it, i) => {
       const at = t0 + (lead + p) * spb, d = PP.BEATS[it.dur] * spb;
-      if(!it.rest && !along) PP.play(PP.NOTES[it.id].m, d * (it.slur ? 1 : .9), at, {vol:.18});
+      const ex = expr[i], hold = along ? 1 : ex.hold;
+      if(!it.rest && !along) PP.play(PP.NOTES[it.id].m, d * ex.len * hold, at, {vol:ex.vol});
       playing.timers.push(setTimeout(() => hl(i), at * 1000));
-      p += PP.BEATS[it.dur];
+      p += PP.BEATS[it.dur] * hold;
     });
     playing.timers.push(setTimeout(stop, (t0 + (lead + p) * spb + .3) * 1000));
   }
   /* Modo seguir: avanza cuando suena la nota correcta. Para notas repetidas
      espera a que el sonido baje un momento (un nuevo arco). */
+  const bowText = it => it.slurIn ? ', en el mismo arco que la anterior' : it.bow === 'd' ? ', arco abajo' : it.bow === 'u' ? ', arco arriba' : '';
   function stopFollow(){
     if(!follow) return;
     cancelAnimationFrame(follow.raf); PP.mic.stop(); follow = null; $('[data-fbox]', root).hidden = true;
@@ -485,7 +486,7 @@ EX['partitura'] = function(root){
     hl(i);
     const n = PP.NOTES[song.notes[i].id];
     const g = $(`[data-lines] [data-i="${i}"]`, root); if(g && g.scrollIntoView) g.closest('.scroll').scrollLeft = Math.max(0, +g.querySelector('.nh').getAttribute('cx') - 160);
-    $('[data-msg]', root).innerHTML = `Nota ${i + 1} de ${song.notes.filter(x => !x.rest).length}: toca <b>${PP.name(n)}</b>, cuerda ${strTag(n.s)}, ${PP.fingerText(n)}.`;
+    $('[data-msg]', root).innerHTML = `Nota ${i + 1} de ${song.notes.filter(x => !x.rest).length}: toca <b>${PP.name(n)}</b>, cuerda ${strTag(n.s)}, ${PP.fingerText(n)}${bowText(song.notes[i])}.`;
   }
   /* Avanza en cuanto la nota suena afinada (dos lecturas seguidas, unos 30 ms).
      Si la nota se repite, espera a un nuevo golpe de arco. */
@@ -510,7 +511,7 @@ EX['partitura'] = function(root){
   $('[data-along]', root).addEventListener('click', () => play(true));
   $('[data-follow]', root).addEventListener('click', startFollow);
   $('[data-bpm]', root).addEventListener('input', e => { bpm = +e.target.value; $('[data-bv]', root).textContent = bpm; });
-  root.querySelectorAll('[data-tg]').forEach(b => b.addEventListener('click', () => { if(b.dataset.tg === 'names') names = !names; else fingers = !fingers; draw(); }));
+  root.querySelectorAll('[data-tg]').forEach(b => b.addEventListener('click', () => { if(b.dataset.tg === 'names') names = !names; else if(b.dataset.tg === 'bows'){ bows = !bows; PP.store.set('ver-arcos', bows); } else fingers = !fingers; draw(); }));
   root._dispose = () => { stop(); stopFollow(); };
   draw();
 };
@@ -702,7 +703,7 @@ EX['primera-vista'] = function(root){
     shown = false; draw();
     count++; PP.store.set('pv-count', count); $('[data-c]', root).textContent = count;
   }
-  function draw(){ $('[data-staff]', root).innerHTML = PP.staff(items, {G:11, spacing:46, key, time:'4/4', names:shown, fingers:shown, final:true}); $('[data-names]', root).textContent = shown ? 'Ocultar nombres' : 'Mostrar nombres'; }
+  function draw(){ PP.bowing(items, '4/4'); $('[data-staff]', root).innerHTML = PP.staff(items, {G:11, spacing:46, key, time:'4/4', names:shown, fingers:shown, bows:PP.store.get('ver-arcos', true), final:true}); $('[data-names]', root).textContent = shown ? 'Ocultar nombres' : 'Mostrar nombres'; }
   root.querySelectorAll('[data-k]').forEach(b => b.addEventListener('click', () => { key = b.dataset.k; seg(); gen(); }));
   $('[data-new]', root).addEventListener('click', gen);
   $('[data-names]', root).addEventListener('click', () => { shown = !shown; draw(); });

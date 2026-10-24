@@ -9,15 +9,16 @@ const strTag = s => `<span class="str ${PP.STRING_CLASS[s]}">${PP.strName(s)}</s
 
 /* ---------- Repertorio ampliado (todas las melodías son de dominio público) ---------- */
 Object.assign(PP.SONGS, {
-  'vals-aire': {t:'Vals de las cuerdas al aire', key:'Do', time:'3/4', bpm:80, notes:S('A4:h E5 A4:h E5 D4:h A4 D4:hd G3:h D4 A4:h E5 A4 E5 A4 A4:hd')},
-  'mary': {t:'María tenía un corderito (canción popular)', key:'Re', time:'4/4', bpm:80, notes:S('Fs4 E4 D4 E4 Fs4 Fs4 Fs4:h E4 E4 E4:h Fs4 A4 A4:h Fs4 E4 D4 E4 Fs4 Fs4 Fs4 Fs4 E4 E4 Fs4 E4 D4:w')},
-  'hanschen': {t:'Hänschen klein (canción popular alemana)', key:'La', time:'4/4', bpm:84, notes:S('E5 Cs5 Cs5:h D5 B4 B4:h A4 B4 Cs5 D5 E5 E5 E5:h E5 Cs5 Cs5:h D5 B4 B4:h A4 Cs5 E5 E5 Cs5:w B4 B4 B4 B4 B4 Cs5 D5:h Cs5 Cs5 Cs5 Cs5 Cs5 D5 E5:h E5 Cs5 Cs5:h D5 B4 B4:h A4 Cs5 E5 E5 A4:w')},
-  'rhody': {t:'Go Tell Aunt Rhody (canción popular)', key:'Re', time:'4/4', bpm:84, notes:S('Fs4:h Fs4 E4 D4:h D4:h E4 E4 G4 Fs4 E4:h D4:h A4:h A4 G4 Fs4:h Fs4:h E4 D4 E4 Fs4 D4:w')},
-  'jingle': {t:'Jingle Bells, estribillo (J. L. Pierpont)', key:'Re', time:'4/4', bpm:100, notes:S('Fs4 Fs4 Fs4:h Fs4 Fs4 Fs4:h Fs4 A4 D4 E4 Fs4:w G4 G4 G4 G4 G4 Fs4 Fs4 Fs4 Fs4 E4 E4 Fs4 E4:h A4:h Fs4 Fs4 Fs4:h Fs4 Fs4 Fs4:h Fs4 A4 D4 E4 Fs4:w G4 G4 G4 G4 G4 Fs4 Fs4 Fs4 A4 A4 G4 E4 D4:w')},
+  'vals-aire': {t:'Vals de las cuerdas al aire', key:'Do', time:'3/4', bpm:80, notes:S('A4:h,mf E5 A4:h E5 D4:h A4 D4:hd G3:h D4 A4:h E5 A4 E5 A4 A4:hd')},
+  'mary': {t:'María tenía un corderito (canción popular)', key:'Re', time:'4/4', bpm:80, notes:S('Fs4,mf E4 D4 E4 Fs4 Fs4 Fs4:h E4 E4 E4:h Fs4 A4 A4:h Fs4 E4 D4 E4 Fs4 Fs4 Fs4 Fs4 E4 E4 Fs4 E4 D4:w')},
+  'hanschen': {t:'Hänschen klein (canción popular alemana)', key:'La', time:'4/4', bpm:84, notes:S('E5,mf Cs5 Cs5:h D5 B4 B4:h A4 B4 Cs5 D5 E5 E5 E5:h E5 Cs5 Cs5:h D5 B4 B4:h A4 Cs5 E5 E5 Cs5:w B4 B4 B4 B4 B4 Cs5 D5:h Cs5 Cs5 Cs5 Cs5 Cs5 D5 E5:h E5 Cs5 Cs5:h D5 B4 B4:h A4 Cs5 E5 E5 A4:w')},
+  'rhody': {t:'Go Tell Aunt Rhody (canción popular)', key:'Re', time:'4/4', bpm:84, notes:S('Fs4:h,mf Fs4 E4 D4:h D4:h E4 E4 G4 Fs4 E4:h D4:h A4:h A4 G4 Fs4:h Fs4:h E4 D4 E4 Fs4 D4:w')},
+  'jingle': {t:'Jingle Bells, estribillo (J. L. Pierpont)', key:'Re', time:'4/4', bpm:100, notes:S('Fs4,f Fs4 Fs4:h Fs4 Fs4 Fs4:h Fs4 A4 D4 E4 Fs4:w G4 G4 G4 G4 G4 Fs4 Fs4 Fs4 Fs4 E4 E4 Fs4 E4:h A4:h Fs4 Fs4 Fs4:h Fs4 Fs4 Fs4:h Fs4 A4 D4 E4 Fs4:w G4 G4 G4 G4 G4 Fs4 Fs4 Fs4 A4 A4 G4 E4 D4:w')},
   'arpegios': {t:'Arpegios de La mayor y Re mayor', key:'La', time:'4/4', bpm:60, notes:S('A4 Cs5 E5 A5 E5 Cs5 A4:h D4 Fs4 A4 D5 A4 Fs4 D4:h')},
-  'canon': {t:'Canon de Pachelbel, tema', key:'Re', time:'4/4', bpm:66, notes:S('Fs5:h E5:h D5:h Cs5:h B4:h A4:h B4:h Cs5:h D5:h Cs5:h B4:h A4:h G4:h Fs4:h G4:h E4:h D4:w')},
-  'clair': {t:'Au clair de la lune (canción popular francesa)', key:'Sol', time:'4/4', bpm:80, notes:S('G4 G4 G4 A4 B4:h A4:h G4 B4 A4 A4 G4:w G4 G4 G4 A4 B4:h A4:h G4 B4 A4 A4 G4:w A4 A4 A4 A4 E4:h E4:h A4 G4 Fs4 E4 D4:w G4 G4 G4 A4 B4:h A4:h G4 B4 A4 A4 G4:w')},
-  'minueto': {t:'Minueto en Sol (atribuido a C. Petzold)', key:'Sol', time:'3/4', bpm:88, notes:S('D5 G4:e A4:e B4:e C5:e D5 G4 G4 E5 C5:e D5:e E5:e Fs5:e G5 G4 G4 C5 D5:e C5:e B4:e A4:e B4 C5:e B4:e A4:e G4:e Fs4 G4:e A4:e B4:e G4:e A4:hd D5 G4:e A4:e B4:e C5:e D5 G4 G4 E5 C5:e D5:e E5:e Fs5:e G5 G4 G4 C5 D5:e C5:e B4:e A4:e B4 C5:e B4:e A4:e G4:e A4 B4:e A4:e G4:e Fs4:e G4:hd')},
+  'canon': {t:'Canon de Pachelbel, tema', key:'Re', time:'4/4', bpm:66, notes:S('Fs5:h,p,cresc E5:h D5:h Cs5:h B4:h A4:h B4:h Cs5:h,end D5:h,mf Cs5:h B4:h A4:h G4:h,dim Fs4:h G4:h E4:h D4:w,end,^')},
+  'clair': {t:'Au clair de la lune (canción popular francesa)', key:'Sol', time:'4/4', bpm:80, notes:S('G4,p G4 G4 A4 B4:h A4:h G4 B4 A4 A4 G4:w G4 G4 G4 A4 B4:h A4:h G4 B4 A4 A4 G4:w A4 A4 A4 A4 E4:h E4:h A4 G4 Fs4 E4 D4:w G4 G4 G4 A4 B4:h A4:h G4 B4 A4 A4 G4:w')},
+  'minueto': {t:'Minueto en Sol (atribuido a C. Petzold)', key:'Sol', time:'3/4', bpm:88, notes:S('D5,mf G4:e A4:e B4:e C5:e D5 G4 G4 E5 C5:e D5:e E5:e Fs5:e G5 G4 G4 C5 D5:e C5:e B4:e A4:e B4 C5:e B4:e A4:e G4:e Fs4 G4:e A4:e B4:e G4:e A4:hd D5,p G4:e A4:e B4:e C5:e D5 G4 G4 E5 C5:e D5:e E5:e Fs5:e G5 G4 G4 C5 D5:e C5:e B4:e A4:e B4 C5:e B4:e A4:e G4:e A4 B4:e A4:e G4:e Fs4:e G4:hd')},
+  'signos': {t:'Estudio de los signos del arco', key:'La', time:'4/4', bpm:60, notes:S("A4:w,D,mf,TA E5:w,TA A4,MS,p A4 A4 A4 Cs5~ B4 A4~ B4 Cs5:e~,cresc D5:e~ E5:e~ Fs5:e,end E5,. Cs5,. A4:h,',>,f E5:h,> D5,dim Cs5 B4 A4,end A4:w,p,^")},
   'do-mayor': {t:'Escala de Do mayor', key:'Do', time:'4/4', bpm:60, notes:S('C4 D4 E4 F4 G4 A4 B4 C5 B4 A4 G4 F4 E4 D4 C4:h')}
 });
 const META = {
@@ -26,7 +27,7 @@ const META = {
   'dedos-re':['estudio',8], 'rhody':['pieza',8], 'jingle':['pieza',8],
   'la-mayor':['escala',9], 're-mayor':['escala',9], 'sol-mayor-1':['escala',9], 'arpegios':['escala',9], 'canon':['pieza',9], 'clair':['pieza',9],
   'alto-bajo':['estudio',10], 'dedo2-bajo':['estudio',10], 'cuarto-dedo':['estudio',10], 'sol-mayor':['escala',10], 'do-mayor':['escala',10],
-  'corcheas':['estudio',11], 'ligados':['estudio',11], 'puntillo':['estudio',11], 'martinillo':['pieza',11], 'oda':['pieza',11], 'minueto':['pieza',12]
+  'corcheas':['estudio',11], 'ligados':['estudio',11], 'puntillo':['estudio',11], 'martinillo':['pieza',11], 'oda':['pieza',11], 'minueto':['pieza',12], 'signos':['estudio',11]
 };
 Object.keys(META).forEach(k => { if(PP.SONGS[k]){ PP.SONGS[k].kind = META[k][0]; PP.SONGS[k].mod = META[k][1]; } });
 
@@ -316,6 +317,53 @@ EX['cancionero'] = function(root){
   list();
 };
 
+/* ---------- Signos del arco: tabla y preguntas ---------- */
+EX['signos'] = function(root){
+  const DM = {pp:'Muy suave', p:'Suave', mp:'Medio suave', mf:'Medio fuerte', f:'Fuerte', ff:'Muy fuerte'};
+  const SIGNS = PP.SIGNS.filter(x => x.k !== 'dyn');
+  let cur = null, done = false;
+  const sc = scoreLine('signos');
+  root.innerHTML = `<div class="ex-head"><h3>${root.dataset.title || 'Los signos del violín'}</h3><span class="ex-kind">Lectura</span></div>
+    <div class="row between"><div class="seg" role="group" aria-label="Modo"><button type="button" data-m="tabla">Ver los signos</button><button type="button" data-m="quiz">Ponte a prueba</button></div><div data-sc>${sc.html}</div></div>
+    <div data-body></div>`;
+  let mode = root.dataset.mode || 'tabla';
+  function paint(){
+    root.querySelectorAll('[data-m]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === mode)));
+    $('[data-sc]', root) && ($('[data-sc]', root).hidden = mode !== 'quiz');
+    if(mode === 'tabla'){ $('[data-body]', root).innerHTML = PP.signTable(); return; }
+    $('[data-body]', root).innerHTML = `<div class="signs-quiz"><div class="big-sign" data-big></div><p class="center" data-q></p><div class="opts" data-opts></div>
+      <p class="feedback" data-fb aria-live="polite"></p><div class="row"><button class="btn small" data-next type="button">Otro signo</button></div></div>`;
+    $('[data-next]', root).addEventListener('click', next);
+    next();
+  }
+  function next(){
+    done = false; $('[data-fb]', root).textContent = '';
+    const dyn = Math.random() < .2;
+    let right, opts, icon, q;
+    if(dyn){
+      let d; do{ d = pick(Object.keys(DM)); }while(cur === d); cur = d;
+      icon = `<svg viewBox="0 0 40 30" width="120" height="90" aria-hidden="true">${PP.SIGN.dyn(20, 22, 11, d, 'var(--ink)')}</svg>`;
+      q = 'Este matiz significa...'; right = DM[d];
+      opts = shuffle([right, ...shuffle(Object.values(DM).filter(v => v !== right)).slice(0, 3)]);
+    } else {
+      let x; do{ x = pick(SIGNS); }while(cur === x.k); cur = x.k;
+      icon = PP.signIcon(x.k, 90); q = '¿Qué significa este signo?'; right = x.t;
+      opts = shuffle([right, ...shuffle(SIGNS.filter(o => o.k !== x.k).map(o => o.t)).slice(0, 3)]);
+    }
+    $('[data-big]', root).innerHTML = icon; $('[data-q]', root).textContent = q;
+    $('[data-opts]', root).innerHTML = opts.map(o => `<button type="button" data-o="${o}">${o}</button>`).join('');
+    root.querySelectorAll('[data-o]').forEach(b => b.addEventListener('click', () => {
+      if(done) return; done = true; const ok = b.dataset.o === right;
+      root.querySelectorAll('[data-o]').forEach(o => { if(o.dataset.o === right) o.classList.add('right'); });
+      if(ok) sc.hit(root); else { b.classList.add('wrong'); sc.miss(root); }
+      const info = dyn ? 'Cuanto más fuerte, más peso de brazo, más velocidad de arco y más cerca del puente.' : PP.SIGNS.find(s => s.k === cur).d;
+      $('[data-fb]', root).innerHTML = `<span class="${ok ? 'ok' : 'bad'}">${ok ? 'Correcto' : 'Era: ' + right}.</span> ${info}`;
+    }));
+  }
+  root.querySelectorAll('[data-m]').forEach(b => b.addEventListener('click', () => { mode = b.dataset.m; paint(); }));
+  paint();
+};
+
 /* ---------- Catálogo para el panel de práctica ---------- */
 const C = (m, id, t, type, ex, attrs) => ({m, id:'m' + m + '-' + id, t, type, ex, attrs:attrs || {}});
 const P = (m, song, type) => C(m, song, PP.SONGS[song].t, type || (PP.SONGS[song].kind === 'pieza' ? 'Piezas' : PP.SONGS[song].kind === 'escala' ? 'Escalas' : 'Partituras'), 'partitura', {song});
@@ -343,7 +391,7 @@ PP.CATALOG = [
   C(10,'cuarto','Explora el cuarto dedo','Mano izquierda','explorador',{pool:'cuarto', start:'A4f', title:'Con cuarto dedo'}), P(10,'cuarto-dedo','Mano izquierda'),
   C(10,'error','Encuentra el error en Sol','Oído','encuentra-error',{keys:'Sol,Re'}),
   C(11,'figuras','Todas las figuras','Ritmo','figuras'), C(11,'palmas','Palmas, nivel 2','Ritmo','palmas',{levels:'2,1'}), C(11,'completa','Completa el compás, nivel 2','Ritmo','completa-compas',{level:'2'}),
-  P(11,'puntillo','Ritmo'), P(11,'corcheas','Ritmo'), P(11,'ligados','Arco y sonido'), P(11,'martinillo'), P(11,'oda'),
+  P(11,'puntillo','Ritmo'), P(11,'corcheas','Ritmo'), P(11,'ligados','Arco y sonido'), C(11,'signos','Los signos del violín','Lectura','signos'), P(11,'signos','Arco y sonido'), P(11,'martinillo'), P(11,'oda'),
   C(12,'cancionero','Cancionero completo','Piezas','cancionero',{kind:'all'}), P(12,'minueto'),
   C(12,'vista','Lectura a primera vista con corcheas','Lectura','primera-vista',{keys:'La,Re,Sol', eighths:'1'}),
   C(12,'dictado','Dictado de tres notas','Oído','dictado',{pool:'alto', len:'3'}), C(12,'error','Encuentra el error','Oído','encuentra-error',{keys:'La,Re,Sol'})
