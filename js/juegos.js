@@ -127,8 +127,8 @@ EX['defiende'] = function(root){
   const cv = $('[data-cv]', root), ctx = cv.getContext('2d');
   let W = 600, H = 250, dpr = 1, gap = 15;
   function size(){
-    const r = cv.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
-    W = Math.max(280, r.width); H = Math.round(Math.min(300, Math.max(220, W * .42)));
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = Math.max(280, cv.clientWidth || 600);   // clientWidth: no le afecta el tamaño de página elegido H = Math.round(Math.min(300, Math.max(220, W * .42)));
     cv.style.height = H + 'px'; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); gap = Math.round(H / 15);
   }

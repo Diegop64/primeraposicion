@@ -40,6 +40,14 @@ const N = [
   ['A5','La','A',   12,81,'Mi',3,5],
   ['B5','Si','B',   13,83,'Mi',4,7],
   ['Cs4','Do♯','C♯', 0,61,'Sol',3,6,'alto','#'],
+  // sostenidos que no salen en las tonalidades del curso (los usa «Todos los dedos»)
+  ['Gs3','Sol♯','G♯', -3,56,'Sol',1,1,'bajo','#'],
+  ['As3','La♯','A♯',  -2,58,'Sol',2,3,'bajo','#'],
+  ['Ds4','Re♯','D♯',   1,63,'Re',1,1,'bajo','#'],
+  ['Gs4','Sol♯','G♯',  4,68,'Re',3,6,'alto','#'],
+  ['As4','La♯','A♯',   5,70,'La',1,1,'bajo','#'],
+  ['Ds5','Re♯','D♯',   8,75,'La',3,6,'alto','#'],
+  ['As5','La♯','A♯',  12,82,'Mi',3,6,'alto','#'],
   ['C6','Do','C',   14,84,'Mi',3,8,'pos3'],
   ['D6','Re','D',   15,86,'Mi',4,10,'pos3']
 ];
@@ -60,11 +68,11 @@ PP.POOLS = {
   cuarto:    ['G3','A3','B3','C4','D4f','E4','Fs4','G4','A4f','B4','Cs5','D5','E5f','Fs5','Gs5','A5','B5'],
   todas:     ['G3','A3','B3','C4','Cs4','D4','E4','F4','Fs4','G4','A4','B4','C5','Cs5','D5','E5','F5','Fs5','G5','Gs5','A5','B5','C6','D6'],
   // todos los dedos de la primera posición en las cuatro cuerdas: alto y bajo, cuarto dedo incluido
-  completa:  ['G3','A3','B3','C4','Cs4','D4f','D4','E4','F4','Fs4','G4','A4f','A4','B4','C5','Cs5','D5','E5f','E5','F5','Fs5','G5','Gs5','A5','B5']
+  completa:  ['G3','Gs3','A3','As3','B3','C4','Cs4','D4f','D4','Ds4','E4','F4','Fs4','G4','Gs4','A4f','A4','As4','B4','C5','Cs5','D5','Ds5','E5f','E5','F5','Fs5','G5','Gs5','A5','As5','B5']
 };
 PP.POOL_NAMES = {
   open:'Cuerdas al aire', naturales:'Notas naturales, de Sol grave a Re agudo', la_mi:'Cuerdas La y Mi', re_la:'Cuerdas Re y La', sol_re:'Cuerdas Sol y Re',
-  alto:'Primera posición, dedo 2 alto', bajo:'Primera posición, dedo 2 bajo', mezcla:'Dedo 2 alto y bajo mezclados', cuarto:'Con cuarto dedo', todas:'Todas las notas', completa:'Toda la primera posición, todos los dedos'
+  alto:'Primera posición, dedo 2 alto', bajo:'Primera posición, dedo 2 bajo', mezcla:'Dedo 2 alto y bajo mezclados', cuarto:'Con cuarto dedo', todas:'Todas las notas', completa:'Toda la primera posición, todos los dedos y sostenidos'
 };
 PP.READ_POOLS = ['naturales','todas','alto','mezcla','la_mi','re_la','sol_re','open'];
 /* Selector de grupo de notas: recuerda la última elección de cada ejercicio */
@@ -292,6 +300,19 @@ PP.LEVELS = [
   {n:2, t:'Leer y colocar los dedos', d:'El pentagrama, el ritmo y el mapa completo de la primera posición con el dedo 2 alto.'},
   {n:3, t:'Tocar música', d:'Escalas, el dedo 2 bajo, el cuarto dedo, corcheas y tus primeras piezas leídas.'}
 ];
+/* ---------- Tamaño de la página ----------
+   En el móvil el navegador no deja alejar más allá del ancho de la pantalla.
+   Este ajuste encoge toda la web (zoom de CSS) para que quepa más, sin cortar nada. */
+PP.ZOOMS = [1, .9, .8, .7];
+PP.applyZoom = function(z){
+  z = PP.ZOOMS.indexOf(z) >= 0 ? z : 1;
+  document.documentElement.style.zoom = z === 1 ? '' : String(z);
+  document.querySelectorAll('[data-zoom]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.zoom === z)));
+};
+PP.applyZoom(PP.store.get('zoom', 1));
+PP.zoomHTML = () => `<div class="seg zoom-seg" role="group" aria-label="Tamaño de la página">${PP.ZOOMS.map(z => `<button type="button" data-zoom="${z}">${Math.round(z * 100)} %</button>`).join('')}</div>`;
+PP.bindZoom = el => el.querySelectorAll('[data-zoom]').forEach(b => b.addEventListener('click', () => { const z = +b.dataset.zoom; PP.store.set('zoom', z); PP.applyZoom(z); window.dispatchEvent(new Event('resize')); }));
+
 /* ---------- Versión (js/version.js, generado por herramientas-dev/nueva_version.py) ---------- */
 PP.VERSION = window.PP_VERSION || null;
 PP.fechaLarga = iso => { const [y, m, d] = iso.split('-').map(Number); return d + ' de ' + ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][m - 1] + ' de ' + y; };
@@ -304,7 +325,8 @@ function versionBadge(){
       <div class="row between"><b>Novedades</b><button type="button" class="btn small" data-ver-close>Cerrar</button></div>
       ${V.historial.map(h => `<section><p class="small"><b>Versión ${h.version}</b> <span class="muted">· ${PP.fechaLarga(h.fecha)}</span></p><ul>${h.cambios.map(c => `<li>${c}</li>`).join('')}</ul></section>`).join('')}
     </div>`;
-  document.body.appendChild(box);
+  const brand = document.querySelector('.site-head .brand');
+  if(brand) brand.insertAdjacentElement('afterend', box); else { box.classList.add('floating'); document.body.appendChild(box); }
   const btn = box.querySelector('.ver-badge'), panel = box.querySelector('.ver-panel');
   const set = open => { panel.hidden = !open; btn.setAttribute('aria-expanded', String(open));
     if(open){ PP.store.set('version-vista', V.version); btn.classList.remove('new'); btn.textContent = 'v' + V.version; } };
@@ -393,7 +415,7 @@ PP.chrome = function(){
   if(h){
     const link = (href, t, key) => `<a href="${href}"${page === key ? ' aria-current="page"' : ''}>${t}</a>`;
     h.outerHTML = `<header class="site-head"><div class="wrap">
-      <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Primera Posición</a>
+      <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="brand-txt">Primera Posición</span></a>
       <nav class="site-nav" aria-label="Principal">
         ${link('index.html', 'Módulos', 'inicio')}
         ${link('practicar.html', 'Practicar', 'practicar')}
@@ -402,7 +424,7 @@ PP.chrome = function(){
         ${link('como-estudiar.html', 'Cómo estudiar', 'estudiar')}
       </nav>
       <div class="vol" role="group" aria-label="Chuleta y volumen">
-        <button type="button" class="btn small chuleta-btn" data-chuleta aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M7 3h10l1 18H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 3v18M14 3v18" stroke="currentColor" stroke-width="1.5"/></svg>Chuleta</button>
+        <button type="button" class="btn small chuleta-btn" data-chuleta aria-haspopup="dialog" aria-label="Chuleta"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M7 3h10l1 18H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 3v18M14 3v18" stroke="currentColor" stroke-width="1.5"/></svg><span class="chuleta-txt">Chuleta</span></button>
         <button type="button" class="vol-btn" data-mute aria-pressed="false"></button>
         <input type="range" min="0" max="100" step="1" data-vol aria-label="Volumen general">
       </div></div></header>`;
@@ -416,8 +438,10 @@ PP.chrome = function(){
     f.outerHTML = `<footer class="site-foot"><div class="wrap">
       <p>Primera Posición. Un curso de violín para empezar desde cero.</p>
       <p>Tu progreso se guarda solo en este navegador. <button class="btn small" id="resetAll" type="button">Borrar mi progreso</button></p>
+      <p class="row" style="gap:10px">Tamaño de la página: ${PP.zoomHTML()}</p>
       ${PP.VERSION ? `<p class="small muted">Versión ${PP.VERSION.version}, ${PP.fechaLarga(PP.VERSION.fecha)}.</p>` : ''}
     </div></footer>`;
+    PP.bindZoom(document.querySelector('.site-foot')); PP.applyZoom(PP.store.get('zoom', 1));
     const r = document.getElementById('resetAll');
     if(r){
       let armed = false;

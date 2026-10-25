@@ -1,6 +1,18 @@
 {
-  "version": "1.5.1",
+  "version": "1.6.0",
   "historial": [
+    {
+      "version": "1.6.0",
+      "fecha": "2026-10-25",
+      "cambios": [
+        "Juegos: nuevo apartado Asociación con todos los juegos de lectura (pentagrama y mástil, ¿qué nota es?, línea o espacio, reto de 60 segundos y toca la nota escrita).",
+        "Asociación: modo «Contar desde la cuerda al aire» y opción «Todos los dedos y sostenidos» con toda la primera posición (La♯, Re♯, Sol♯...).",
+        "El nombre de la nota aparece al lado en verde o rojo también en «¿Qué nota es?» y «¿Línea o espacio?».",
+        "La versión se ve arriba a la izquierda, junto al nombre de la web.",
+        "Tamaño de la página (al final de cada página): encoge la web en el móvil para que quepa más sin que nada se corte.",
+        "Arreglos en el móvil: el selector de notas ya no se sale de la pantalla y la cabecera tiene más sitio."
+      ]
+    },
     {
       "version": "1.5.1",
       "fecha": "2026-10-24",

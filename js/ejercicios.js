@@ -113,7 +113,7 @@ EX['linea-espacio'] = function(root){
 /* ---------- 3. Asociación pentagrama ↔ mástil ---------- */
 EX['asociacion'] = function(root){
   const pools = (root.dataset.pools || 'la_mi,re_la,alto').split(',');
-  const PN = {open:'Cuerdas al aire', la_mi:'Cuerdas La y Mi', re_la:'Cuerdas Re y La', sol_re:'Cuerdas Sol y Re', alto:'Las cuatro (dedo 2 alto)', bajo:'Las cuatro (dedo 2 bajo)', mezcla:'Alto y bajo mezclados', cuarto:'Con cuarto dedo', completa:'Todos los dedos'};
+  const PN = {open:'Cuerdas al aire', la_mi:'Cuerdas La y Mi', re_la:'Cuerdas Re y La', sol_re:'Cuerdas Sol y Re', alto:'Las cuatro (dedo 2 alto)', bajo:'Las cuatro (dedo 2 bajo)', mezcla:'Alto y bajo mezclados', cuarto:'Con cuarto dedo', completa:'Todos los dedos y sostenidos'};
   let poolKey = pools[0], mode = 1, target = null, done = false, count = PP.store.get('asoc-contar', false), tIdx = 0;
   const sc = scoreBox('asoc'), nt = namesToggle(() => next());
   root.innerHTML = `<div class="ex-head"><h3>Asociación: pentagrama y mástil</h3><span class="ex-kind">Lectura y mano izquierda</span></div>
@@ -175,7 +175,9 @@ EX['asociacion'] = function(root){
   }
   const staffNote = id => mode === 1 ? $(`[data-staff] [data-i="${tIdx}"]`, root) : $(`[data-staff] [data-id="${id}"]`, root);
   const revealSteps = () => { const st = $('[data-staff]', root); if(st) st.classList.remove('steps-hidden'); };
-  const stepText = () => { if(!count) return ''; const o = openOf(target), k = target.d - o.d; return k === 0 ? ' Es la cuerda al aire: 0 escalones.' : ` Desde ${PP.name(o)} al aire hay ${k} ${k === 1 ? 'escalón' : 'escalones'}: dedo ${target.f}.`; };
+  const stepText = () => { if(!count) return ''; const o = openOf(target), k = target.d - o.d; if(target.acc && k !== target.f){ const nat = Object.values(PP.NOTES).find(x => x.s === target.s && x.d === target.d && !x.acc);
+      return ` Está en el sitio de ${nat ? PP.name(nat) : 'la nota natural'} (${k} ${k === 1 ? 'escalón' : 'escalones'} desde ${PP.name(o)} al aire), pero el sostenido la sube medio tono: dedo ${target.f} ${target.pos || ''}.`; }
+    return k === 0 ? ' Es la cuerda al aire: 0 escalones.' : ` Desde ${PP.name(o)} al aire hay ${k} ${k === 1 ? 'escalón' : 'escalones'}: dedo ${target.f}.`; };
   function result(right, clicked){
     if(mode === 1){ tag(staffNote(target.id), target, right); revealSteps(); }
     if(right){ sc.hit(root); done = true; PP.play(target.m, .9);
