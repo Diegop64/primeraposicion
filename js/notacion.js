@@ -404,6 +404,17 @@ function restSVG(dur, x, yOf, G){
   return `<text x="${x}" y="${yOf(6)}" text-anchor="middle" font-size="${G * 4}" fill="var(--ink)" style="font-family:var(--f-music)">\u{1D13D}</text>`;
 }
 
+/* Nombre de la nota en pequeño, justo a la derecha de la nota del pentagrama (verde oscuro o rojo oscuro) */
+PP.tagNote = function(g, n, ok, size){
+  const h = g && g.querySelector('.nh'); if(!h) return;
+  const old = g.querySelector('.note-tag'); if(old) old.remove();
+  const cx = +h.getAttribute('cx'), cy = +h.getAttribute('cy'), rx = +h.getAttribute('rx'), G = rx / .66;
+  const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  t.setAttribute('class', 'note-tag ' + (ok ? 'ok' : 'bad'));
+  t.setAttribute('x', cx + rx + G * .5); t.setAttribute('y', cy + G * .4);
+  t.setAttribute('font-size', G * (size || 1.15)); t.setAttribute('font-weight', '700');
+  t.textContent = PP.name(n); g.appendChild(t);
+};
 PP.bindStaff = function(el, fn){
   el.querySelectorAll('.hit').forEach(g => {
     g.addEventListener('click', () => fn(g));

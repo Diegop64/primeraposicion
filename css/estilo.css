@@ -377,3 +377,8 @@ svg text{font-family:var(--f-display)}
 .steps-hidden .under-lab{visibility:hidden}
 .count-tip{margin:0}
 .btn[aria-pressed="true"]{background:var(--ink);color:var(--page);border-color:var(--ink)}
+.games-sec{display:grid;gap:4px;border-top:1px solid var(--rule);padding-top:22px}
+.games-sec h2{margin:0}
+.ex>*{min-width:0}
+.pool-field{max-width:100%}
+.pool-field select{width:100%;text-overflow:ellipsis}

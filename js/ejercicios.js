@@ -53,6 +53,7 @@ EX['quiz-nota'] = function(root){
     if(done) return; done = true;
     const right = b.textContent === PP.name(cur);
     root.querySelectorAll('[data-opts] button').forEach(x => { if(x.textContent === PP.name(cur)) x.classList.add('right'); });
+    PP.tagNote($('[data-staff] [data-id]', root), cur, right);
     PP.play(cur.m, 0.9);
     const where = PP.where(cur);
     if(right){ sc.hit(root); $('[data-fb]', root).innerHTML = `<span class="ok">Correcto.</span> ${PP.name(cur)} está ${where}. Se toca en la cuerda ${strTag(cur.s)}, ${PP.fingerText(cur)}.`; setTimeout(() => { if(done) next(); }, 1700); }
@@ -98,6 +99,7 @@ EX['linea-espacio'] = function(root){
     if(done) return; done = true;
     const line = cur.d % 2 === 0, right = (b.dataset.a === 'l') === line;
     b.classList.add(right ? 'right' : 'wrong');
+    PP.tagNote($('[data-staff] [data-id]', root), cur, right);
     const txt = `Está ${PP.where(cur)}${cur.d >= 2 && cur.d <= 10 ? ', contando desde abajo' : ''}: es ${PP.name(cur)}.`;
     if(right){ sc.hit(root); $('[data-fb]', root).innerHTML = `<span class="ok">Bien.</span> ${txt}`; setTimeout(() => { if(done) next(); }, 1700); }
     else { sc.miss(root); $('[data-fb]', root).innerHTML = `<span class="bad">No, es ${line ? 'línea' : 'espacio'}.</span> ${txt}`; }
