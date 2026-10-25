@@ -462,6 +462,6 @@ if(PP.CATALOG){
     {m:5, id:'m5-parejas', t:'Parejas', type:'Juegos', ex:'parejas', attrs:{}},
     {m:8, id:'m8-defiende', t:'Defiende la clave en el mástil', type:'Juegos', ex:'defiende', attrs:{}},
     {m:5, id:'m5-voz', t:'Calibra tu voz para los juegos', type:'Juegos', ex:'voz-calibrar', attrs:{}},
-    {m:8, id:'m8-asoc-juego', t:'Asociación: pentagrama y mástil', type:'Juegos', ex:'asociacion', attrs:{pools:'alto,la_mi,re_la,sol_re,bajo,mezcla,cuarto'}});
+    {m:8, id:'m8-asoc-juego', t:'Asociación: pentagrama y mástil', type:'Juegos', ex:'asociacion', attrs:{pools:'alto,la_mi,re_la,sol_re,bajo,mezcla,cuarto,completa'}});
 }
 })();

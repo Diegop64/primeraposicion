@@ -58,11 +58,13 @@ PP.POOLS = {
   bajo:      ['G3','A3','B3','C4','D4','E4','F4','G4','A4','B4','C5','D5','E5','Fs5','G5','A5'],
   mezcla:    ['G3','A3','B3','C4','D4','E4','F4','Fs4','G4','A4','B4','C5','Cs5','D5','E5','Fs5','G5','Gs5','A5'],
   cuarto:    ['G3','A3','B3','C4','D4f','E4','Fs4','G4','A4f','B4','Cs5','D5','E5f','Fs5','Gs5','A5','B5'],
-  todas:     ['G3','A3','B3','C4','Cs4','D4','E4','F4','Fs4','G4','A4','B4','C5','Cs5','D5','E5','F5','Fs5','G5','Gs5','A5','B5','C6','D6']
+  todas:     ['G3','A3','B3','C4','Cs4','D4','E4','F4','Fs4','G4','A4','B4','C5','Cs5','D5','E5','F5','Fs5','G5','Gs5','A5','B5','C6','D6'],
+  // todos los dedos de la primera posición en las cuatro cuerdas: alto y bajo, cuarto dedo incluido
+  completa:  ['G3','A3','B3','C4','Cs4','D4f','D4','E4','F4','Fs4','G4','A4f','A4','B4','C5','Cs5','D5','E5f','E5','F5','Fs5','G5','Gs5','A5','B5']
 };
 PP.POOL_NAMES = {
   open:'Cuerdas al aire', naturales:'Notas naturales, de Sol grave a Re agudo', la_mi:'Cuerdas La y Mi', re_la:'Cuerdas Re y La', sol_re:'Cuerdas Sol y Re',
-  alto:'Primera posición, dedo 2 alto', bajo:'Primera posición, dedo 2 bajo', mezcla:'Dedo 2 alto y bajo mezclados', cuarto:'Con cuarto dedo', todas:'Todas las notas'
+  alto:'Primera posición, dedo 2 alto', bajo:'Primera posición, dedo 2 bajo', mezcla:'Dedo 2 alto y bajo mezclados', cuarto:'Con cuarto dedo', todas:'Todas las notas', completa:'Toda la primera posición, todos los dedos'
 };
 PP.READ_POOLS = ['naturales','todas','alto','mezcla','la_mi','re_la','sol_re','open'];
 /* Selector de grupo de notas: recuerda la última elección de cada ejercicio */
