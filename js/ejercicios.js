@@ -112,11 +112,13 @@ EX['linea-espacio'] = function(root){
 EX['asociacion'] = function(root){
   const pools = (root.dataset.pools || 'la_mi,re_la,alto').split(',');
   const PN = {open:'Cuerdas al aire', la_mi:'Cuerdas La y Mi', re_la:'Cuerdas Re y La', sol_re:'Cuerdas Sol y Re', alto:'Las cuatro (dedo 2 alto)', bajo:'Las cuatro (dedo 2 bajo)', mezcla:'Alto y bajo mezclados', cuarto:'Con cuarto dedo'};
-  let poolKey = pools[0], mode = 1, target = null, done = false;
+  let poolKey = pools[0], mode = 1, target = null, done = false, count = PP.store.get('asoc-contar', false), tIdx = 0;
   const sc = scoreBox('asoc'), nt = namesToggle(() => next());
   root.innerHTML = `<div class="ex-head"><h3>Asociación: pentagrama y mástil</h3><span class="ex-kind">Lectura y mano izquierda</span></div>
     <div class="row between"><div class="seg" role="group" aria-label="Modo"><button type="button" data-mode="1">Del pentagrama al mástil</button><button type="button" data-mode="2">Del mástil al pentagrama</button></div>${nt.html}</div>
     <div class="row between"><div class="seg" role="group" aria-label="Notas">${pools.map(p => `<button type="button" data-pool="${p}">${PN[p]}</button>`).join('')}</div>${sc.html}</div>
+    <div class="row"><button type="button" class="btn small" data-count aria-pressed="false">Contar desde la cuerda al aire</button></div>
+    <div class="callout tip count-tip" data-count-tip hidden><p class="small"><b>El truco</b>En cada cuerda, sus cuatro notas son cuatro posiciones seguidas del pentagrama. Busca la cuerda al aire que hay debajo de la nota (Sol, Re, La o Mi) y cuenta los escalones, línea, espacio, línea...: cada escalón es un dedo. En el pentagrama, la nota con el color de su cuerda es la cuerda al aire y las grises son los escalones; al responder verás el número de cada escalón.</p></div>
     <div class="split"><div class="center" data-board></div>
       <div style="display:grid;gap:12px;align-content:start;min-width:0"><p data-prompt style="font-family:var(--f-display);font-size:1.25rem;font-weight:700"></p>
       <div class="scroll" data-staff></div><p class="feedback" data-fb aria-live="polite"></p>
@@ -128,9 +130,24 @@ EX['asociacion'] = function(root){
     const p = PP.pool(poolKey); let n; do{ n = pick(p); }while(target && n.id === target.id && p.length > 1);
     target = n; done = false; $('[data-fb]', root).textContent = '';
     board = PP.board($('[data-board]', root), {notes:PP.POOLS[poolKey], label:'finger', width:230, onPick:pickBoard});
+    $('[data-count-tip]', root).hidden = !count;
+    $('[data-count]', root).setAttribute('aria-pressed', String(count));
     if(mode === 1){
-      $('[data-prompt]', root).textContent = 'Pulsa en el mástil dónde se toca esta nota.';
-      $('[data-staff]', root).innerHTML = PP.staff([{id:n.id, dur:'w'}], {G:13, spacing:80, minWidth:220});
+      $('[data-prompt]', root).textContent = count ? 'Cuenta los escalones desde la cuerda al aire y pulsa en el mástil.' : 'Pulsa en el mástil dónde se toca esta nota.';
+      if(count){
+        // la cuerda al aire de esa nota, los escalones intermedios (en gris) y la nota
+        const open = openOf(n), items = [];
+        for(let d = open.d; d < n.d; d++){ const st = d === open.d ? open : Object.values(PP.NOTES).find(x => x.d === d && !x.acc && !/f$/.test(x.id)); items.push({id:st.id, dur:'w', under:d - open.d}); }
+        items.push({id:n.id, dur:'w', under:n.d - open.d});
+        tIdx = items.length - 1;
+        $('[data-staff]', root).innerHTML = PP.staff(items, {G:13, spacing:58, minWidth:220});
+        // la cuerda al aire, en el color de su cuerda; los escalones, en gris
+        root.querySelectorAll('[data-staff] [data-i]').forEach(g => { const i = +g.dataset.i; if(i < tIdx) g.querySelectorAll('.nh').forEach(h => { if(i === 0){ h.style.stroke = `var(--${PP.STRING_CLASS[open.s]})`; h.style.strokeWidth = '3'; } else h.style.opacity = '.32'; }); });
+        $('[data-staff]', root).classList.add('steps-hidden');
+      } else {
+        tIdx = 0;
+        $('[data-staff]', root).innerHTML = PP.staff([{id:n.id, dur:'w'}], {G:13, spacing:80, minWidth:220});
+      }
     } else {
       $('[data-prompt]', root).innerHTML = `¿Dónde se escribe la nota marcada? Cuerda ${strTag(n.s)}, ${PP.fingerText(n)}.`;
       const ord = p.slice().sort((a, b) => a.m - b.m || a.d - b.d);
@@ -138,39 +155,45 @@ EX['asociacion'] = function(root){
       root.querySelectorAll('[data-staff] .nh').forEach(e => e.style.opacity = '.35');
       PP.bindStaff($('[data-staff]', root), g => pickStaff(g));
       board.mark(n.id, `var(--${PP.STRING_CLASS[n.s]})`);
+      if(count){ const open = openOf(n), g = $(`[data-staff] [data-id="${open.id}"]`, root);
+        if(g && open.id !== n.id){ const h = g.querySelector('.nh'); h.style.opacity = '1'; h.style.fill = `var(--${PP.STRING_CLASS[open.s]})`; } }
     }
   }
   // nombre de la nota, pequeño, al lado de la nota del pentagrama (verde oscuro si aciertas, rojo oscuro si no)
-  function tag(g, n, ok){
+  const openOf = n => Object.values(PP.NOTES).find(x => x.s === n.s && x.f === 0);
+  function tag(g, n, ok, text){
     const h = g && g.querySelector('.nh'); if(!h) return;
     const old = g.querySelector('.note-tag'); if(old) old.remove();
     const cx = +h.getAttribute('cx'), cy = +h.getAttribute('cy'), rx = +h.getAttribute('rx'), G = rx / .66;
     const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    t.setAttribute('class', 'note-tag ' + (ok ? 'ok' : 'bad'));
+    t.setAttribute('class', 'note-tag ' + (ok == null ? 'ref' : ok ? 'ok' : 'bad'));
     t.setAttribute('x', cx + rx + G * (mode === 1 ? .5 : .3)); t.setAttribute('y', cy + G * .4);
     t.setAttribute('font-size', G * (mode === 1 ? 1.15 : .95)); t.setAttribute('font-weight', '700');
-    t.textContent = PP.name(n); g.appendChild(t);
+    t.textContent = text || PP.name(n); g.appendChild(t);
   }
-  const staffNote = id => $(`[data-staff] [data-id="${id}"]`, root);
+  const staffNote = id => mode === 1 ? $(`[data-staff] [data-i="${tIdx}"]`, root) : $(`[data-staff] [data-id="${id}"]`, root);
+  const revealSteps = () => { const st = $('[data-staff]', root); if(st) st.classList.remove('steps-hidden'); };
+  const stepText = () => { if(!count) return ''; const o = openOf(target), k = target.d - o.d; return k === 0 ? ' Es la cuerda al aire: 0 escalones.' : ` Desde ${PP.name(o)} al aire hay ${k} ${k === 1 ? 'escalón' : 'escalones'}: dedo ${target.f}.`; };
   function result(right, clicked){
-    if(mode === 1) tag(staffNote(target.id), target, right);
+    if(mode === 1){ tag(staffNote(target.id), target, right); revealSteps(); }
     if(right){ sc.hit(root); done = true; PP.play(target.m, .9);
-      $('[data-fb]', root).innerHTML = `<span class="ok">Eso es.</span> ${PP.name(target)}: cuerda ${strTag(target.s)}, ${PP.fingerText(target)}.`;
+      $('[data-fb]', root).innerHTML = `<span class="ok">Eso es.</span> ${PP.name(target)}: cuerda ${strTag(target.s)}, ${PP.fingerText(target)}.${stepText()}`;
       setTimeout(() => { if(done) next(); }, 1500); }
     else { sc.miss(root); PP.play(clicked.m, .6, 0, {vol:.12});
-      $('[data-fb]', root).innerHTML = `<span class="bad">Esa es ${PP.name(clicked)}</span> (cuerda ${strTag(clicked.s)}, ${PP.fingerText(clicked)}). Prueba otra vez.`; }
+      $('[data-fb]', root).innerHTML = `<span class="bad">Esa es ${PP.name(clicked)}</span> (cuerda ${strTag(clicked.s)}, ${PP.fingerText(clicked)}). Prueba otra vez.${mode === 1 && count ? ' Fíjate en los números de debajo: son los escalones desde la cuerda al aire.' : ''}`; }
   }
   function pickBoard(n){ if(mode !== 1 || done) return; const r = n.id === target.id || (n.m === target.m && n.d === target.d); board.mark(n.id, r ? 'var(--ok)' : 'var(--bad)'); result(r, n); }
   function pickStaff(g){ if(mode !== 2 || done) return; const n = PP.NOTES[g.dataset.id], r = n.m === target.m && n.d === target.d; const h = g.querySelector('.nh'); h.style.opacity = '1'; h.style.fill = r ? 'var(--ok)' : 'var(--bad)'; tag(g, n, r); result(r, n); }
   root.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { mode = +b.dataset.mode; seg('[data-mode]', 'mode', mode); next(); }));
   root.querySelectorAll('[data-pool]').forEach(b => b.addEventListener('click', () => { poolKey = b.dataset.pool; seg('[data-pool]', 'pool', poolKey); next(); }));
   $('[data-next]', root).addEventListener('click', next);
+  $('[data-count]', root).addEventListener('click', () => { count = !count; PP.store.set('asoc-contar', count); next(); });
   $('[data-hear]', root).addEventListener('click', () => target && PP.play(target.m, 1));
   $('[data-show]', root).addEventListener('click', () => {
     if(!target) return; done = true; PP.play(target.m, 1); sc.miss(root);
     if(mode === 1) board.mark(target.id, 'var(--ok)');
     else { const h = $(`[data-staff] [data-id="${target.id}"] .nh`, root); if(h){ h.style.opacity = '1'; h.style.fill = 'var(--ok)'; } }
-    tag(staffNote(target.id), target, true);
+    tag(staffNote(target.id), target, true); revealSteps();
     $('[data-fb]', root).innerHTML = `Es ${PP.name(target)}: cuerda ${strTag(target.s)}, ${PP.fingerText(target)}.`;
   });
   seg('[data-mode]', 'mode', 1); seg('[data-pool]', 'pool', poolKey);

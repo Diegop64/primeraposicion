@@ -373,3 +373,7 @@ svg text{font-family:var(--f-display)}
 .ver-panel section+section{border-top:1px solid var(--rule);padding-top:8px}
 .ver-panel p{margin:0}
 @media print{.ver-corner{display:none}}
+.staff-svg .note-tag.ref{fill:var(--muted)}
+.steps-hidden .under-lab{visibility:hidden}
+.count-tip{margin:0}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--page);border-color:var(--ink)}

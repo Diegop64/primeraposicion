@@ -312,7 +312,8 @@ PP.staff = function(items, opts){
   const hasDyn = items.some(it => it.dyn || it.hairT);
   const dynY = low + G * 1.9;
   const labBase = hasDyn ? dynY + G * .5 : low + G * .3;
-  const labelsH = (opts.names ? G * 1.7 : 0) + (opts.fingers ? G * 1.7 : 0);
+  const hasUnder = items.some(it => it.under != null);
+  const labelsH = (opts.names ? G * 1.7 : 0) + (opts.fingers ? G * 1.7 : 0) + (hasUnder ? G * 1.7 : 0);
   const H = labBase + labelsH + G * .7;
 
   let s = '';
@@ -370,6 +371,7 @@ PP.staff = function(items, opts){
     let ly = labBase;
     if(opts.names){ ly += G * 1.7; s += `<text class="lab" x="${xx}" y="${ly}" text-anchor="middle" font-size="${G * 1.3}" font-weight="700" fill="${INK}">${PP.name(n)}</text>`; }
     if(opts.fingers){ ly += G * 1.7; s += `<text x="${xx}" y="${ly}" text-anchor="middle" font-size="${G * 1.15}" fill="var(--${PP.STRING_CLASS[n.s]})" font-weight="700">${n.f === 0 ? '0' : n.f}</text>`; }
+    if(hasUnder && it.under != null){ ly += G * 1.7; s += `<text class="under-lab" x="${xx}" y="${ly}" text-anchor="middle" font-size="${G * 1.1}" font-weight="700" fill="var(--muted)">${it.under}</text>`; }
     if(it.label) s += `<text x="${xx}" y="${minY - G * .3}" text-anchor="middle" font-size="${G * 1.1}" fill="var(--muted)">${it.label}</text>`;
     s += `</g>`;
   });
