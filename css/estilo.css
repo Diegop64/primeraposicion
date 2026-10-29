@@ -385,3 +385,8 @@ svg text{font-family:var(--f-display)}
 .pool-field select{width:100%;text-overflow:ellipsis}
 @media (max-width:480px){.chuleta-txt{display:none}.chuleta-btn{padding-inline:9px}.vol input{width:64px}.brand{font-size:1rem;gap:8px}}
 @media (max-width:350px){.brand-txt{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.ver-corner{margin-left:0}}
+.place-wrap{display:grid;gap:10px}
+.place-svg{touch-action:manipulation}
+.place-svg:focus{outline:none}
+.place-svg:focus-visible{outline:2px solid var(--la);outline-offset:3px;border-radius:6px}
+.place-tools{gap:8px}

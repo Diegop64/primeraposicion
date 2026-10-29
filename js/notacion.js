@@ -404,6 +404,61 @@ function restSVG(dur, x, yOf, G){
   return `<text x="${x}" y="${yOf(6)}" text-anchor="middle" font-size="${G * 4}" fill="var(--ink)" style="font-family:var(--f-music)">\u{1D13D}</text>`;
 }
 
+/* ---------- Pentagrama vacío para colocar una nota ----------
+   opts: G, minD, maxD (rango de posiciones), ref {d, color} (nota de referencia),
+         onCheck(d, sharp) → {ok, label} (se llama al colocar con ratón, Intro o «Comprobar»)
+   Con el ratón: clic = colocar y comprobar. En pantalla táctil o teclado: se coloca, se ajusta
+   con ▲ ▼ y se comprueba con el botón. */
+PP.placeStaff = function(el, opts){
+  const G = opts.G || 14, minD = opts.minD, maxD = opts.maxD;
+  const T = G * 1.4 + Math.max(0, maxD + 1 - 10) * G / 2;
+  const yOf = d => T + (10 - d) * G / 2;
+  const W = Math.max(300, G * 22), H = Math.max(yOf(minD - 1), yOf(1)) + G * 1.4;
+  const xN = W * .62, NS = 'http://www.w3.org/2000/svg';
+  let cand = null, sharp = false, locked = false;
+  const ledgers = (d, x) => { let s = ''; for(let k = 0; k >= d; k -= 2) s += `<line x1="${x - G * 1.05}" x2="${x + G * 1.05}" y1="${yOf(k)}" y2="${yOf(k)}" stroke="var(--ink)" stroke-width="${G * .1}"/>`;
+    for(let k = 12; k <= d; k += 2) s += `<line x1="${x - G * 1.05}" x2="${x + G * 1.05}" y1="${yOf(k)}" y2="${yOf(k)}" stroke="var(--ink)" stroke-width="${G * .1}"/>`; return s; };
+  const head = (d, x, fill, sh) => ledgers(d, x) + (sh ? PP.sharpSVG(x - G * 1.75, yOf(d), G * .9) : '') +
+    `<ellipse class="nh" cx="${x}" cy="${yOf(d)}" rx="${G * .66}" ry="${G * .46}" transform="rotate(-22 ${x} ${yOf(d)})" fill="${fill}"/>`;
+  let s = `<svg class="staff-svg place-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" tabindex="0" role="application" aria-label="Pentagrama: coloca la nota con el ratón, tocando la pantalla o con las flechas arriba y abajo e Intro">`;
+  for(let k = 0; k < 5; k++){ const y = yOf(2 + k * 2); s += `<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="var(--ink)" stroke-width="${G * .1}"/>`; }
+  s += `<line x1="${W - G * .1}" x2="${W - G * .1}" y1="${yOf(10)}" y2="${yOf(2)}" stroke="var(--ink)" stroke-width="${G * .12}"/>`;
+  s += `<text x="${G * 1.2}" y="${yOf(2) + G * 1.05}" font-size="${G * 6}" fill="var(--ink)" style="font-family:var(--f-music)">\u{1D11E}</text>`;
+  if(opts.ref) s += `<g class="place-ref">${head(opts.ref.d, xN - G * 4.2, 'none')}<text x="${xN - G * 4.2}" y="${yOf(opts.ref.d) + G * (opts.ref.d <= 2 ? -1.1 : 1.8)}" text-anchor="middle" font-size="${G * .85}" font-weight="700" fill="${opts.ref.color}">al aire</text></g>`;
+  s += `<g data-ghost opacity=".3"></g><g data-placed></g><rect data-hit x="${G * 4.6}" y="0" width="${W - G * 4.6}" height="${H}" fill="transparent" style="cursor:pointer"/></svg>`;
+  el.innerHTML = `<div class="place-wrap"><div class="scroll">${s}</div>
+    <div class="row place-tools"><div class="seg" role="group" aria-label="Alteración"><button type="button" data-acc="0" aria-pressed="true">Natural</button><button type="button" data-acc="1" aria-pressed="false">♯ Sostenido</button></div>
+    <button type="button" class="btn small" data-mv="1" aria-label="Subir la nota">▲</button><button type="button" class="btn small" data-mv="-1" aria-label="Bajar la nota">▼</button>
+    <button type="button" class="btn small primary" data-check disabled>Comprobar</button></div></div>`;
+  const svg = el.querySelector('svg'), ghost = el.querySelector('[data-ghost]'), placed = el.querySelector('[data-placed]');
+  if(opts.ref){ const r = el.querySelector('.place-ref .nh'); r.setAttribute('stroke', opts.ref.color); r.setAttribute('stroke-width', G * .22); }
+  const dAt = ev => { const p = svg.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY; const q = p.matrixTransform(svg.getScreenCTM().inverse());
+    return Math.max(minD - 1, Math.min(maxD + 1, Math.round(10 - (q.y - T) * 2 / G))); };
+  function drawCand(){ placed.innerHTML = cand == null ? '' : head(cand, xN, 'var(--ink)', sharp); el.querySelector('[data-check]').disabled = cand == null || locked; }
+  function check(){ if(cand == null || locked) return; const r = opts.onCheck(cand, sharp); show(cand, sharp, r.ok, r.label); if(r.ok) locked = true; }
+  function show(d, sh, ok, label){
+    placed.innerHTML = head(d, xN, ok ? 'var(--ok)' : 'var(--bad)', sh) +
+      `<text class="note-tag ${ok ? 'ok' : 'bad'}" x="${xN + G * 1.2}" y="${yOf(d) + G * .4}" font-size="${G * 1.1}" font-weight="700">${label}</text>`;
+    el.querySelector('[data-check]').disabled = true;
+  }
+  const hit = el.querySelector('[data-hit]');
+  hit.addEventListener('pointermove', ev => { if(locked || ev.pointerType !== 'mouse') return; ghost.innerHTML = head(dAt(ev), xN, 'var(--ink)', sharp); });
+  hit.addEventListener('pointerleave', () => { ghost.innerHTML = ''; });
+  // con ratón se coloca y se comprueba a la vez; con el dedo se coloca y se confirma con «Comprobar»
+  let lastType = 'mouse'; hit.addEventListener('pointerdown', ev => { lastType = ev.pointerType || 'mouse'; });
+  hit.addEventListener('click', ev => { if(locked) return; cand = dAt(ev); ghost.innerHTML = '';
+    if(lastType === 'mouse') check(); else drawCand(); });
+  svg.addEventListener('keydown', ev => {
+    if(locked) return;
+    if(ev.key === 'ArrowUp' || ev.key === 'ArrowDown'){ ev.preventDefault(); cand = Math.max(minD - 1, Math.min(maxD + 1, (cand == null ? Math.round((minD + maxD) / 2) : cand) + (ev.key === 'ArrowUp' ? 1 : -1))); drawCand(); }
+    if(ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); check(); }
+  });
+  el.querySelectorAll('[data-mv]').forEach(b => b.addEventListener('click', () => { if(locked) return; cand = Math.max(minD - 1, Math.min(maxD + 1, (cand == null ? Math.round((minD + maxD) / 2) : cand) + +b.dataset.mv)); drawCand(); }));
+  el.querySelectorAll('[data-acc]').forEach(b => b.addEventListener('click', () => { sharp = b.dataset.acc === '1'; el.querySelectorAll('[data-acc]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); if(!locked && cand != null && placed.querySelector('.note-tag') == null) drawCand(); }));
+  el.querySelector('[data-check]').addEventListener('click', check);
+  return { reveal(d, sh, label){ locked = true; show(d, sh, true, label); }, lock(){ locked = true; } };
+};
+
 /* Nombre de la nota en pequeño, justo a la derecha de la nota del pentagrama (verde oscuro o rojo oscuro) */
 PP.tagNote = function(g, n, ok, size){
   const h = g && g.querySelector('.nh'); if(!h) return;

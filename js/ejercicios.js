@@ -117,10 +117,10 @@ EX['asociacion'] = function(root){
   let poolKey = pools[0], mode = 1, target = null, done = false, count = PP.store.get('asoc-contar', false), tIdx = 0;
   const sc = scoreBox('asoc'), nt = namesToggle(() => next());
   root.innerHTML = `<div class="ex-head"><h3>Asociación: pentagrama y mástil</h3><span class="ex-kind">Lectura y mano izquierda</span></div>
-    <div class="row between"><div class="seg" role="group" aria-label="Modo"><button type="button" data-mode="1">Del pentagrama al mástil</button><button type="button" data-mode="2">Del mástil al pentagrama</button></div>${nt.html}</div>
+    <div class="row between"><div class="seg" role="group" aria-label="Modo"><button type="button" data-mode="1">Del pentagrama al mástil</button><button type="button" data-mode="2">Del mástil al pentagrama: colócala tú</button></div>${nt.html}</div>
     <div class="row between"><div class="seg" role="group" aria-label="Notas">${pools.map(p => `<button type="button" data-pool="${p}">${PN[p]}</button>`).join('')}</div>${sc.html}</div>
     <div class="row"><button type="button" class="btn small" data-count aria-pressed="false">Contar desde la cuerda al aire</button></div>
-    <div class="callout tip count-tip" data-count-tip hidden><p class="small"><b>El truco</b>En cada cuerda, sus cuatro notas son cuatro posiciones seguidas del pentagrama. Busca la cuerda al aire que hay debajo de la nota (Sol, Re, La o Mi) y cuenta los escalones, línea, espacio, línea...: cada escalón es un dedo. En el pentagrama, la nota con el color de su cuerda es la cuerda al aire y las grises son los escalones; al responder verás el número de cada escalón.</p></div>
+    <div class="callout tip count-tip" data-count-tip hidden><p class="small"><b>El truco</b>En cada cuerda, sus cuatro notas son cuatro posiciones seguidas del pentagrama. Busca la cuerda al aire que hay debajo de la nota (Sol, Re, La o Mi) y cuenta los escalones, línea, espacio, línea...: cada escalón es un dedo. La cuerda al aire de referencia aparece en el pentagrama con el color de su cuerda: cuenta los escalones desde ahí. Al responder verás el número de cada escalón.</p></div>
     <div class="split"><div class="center" data-board></div>
       <div style="display:grid;gap:12px;align-content:start;min-width:0"><p data-prompt style="font-family:var(--f-display);font-size:1.25rem;font-weight:700"></p>
       <div class="scroll" data-staff></div><p class="feedback" data-fb aria-live="polite"></p>
@@ -128,7 +128,9 @@ EX['asociacion'] = function(root){
   nt.bind(root);
   const seg = (sel, attr, val) => root.querySelectorAll(sel).forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === String(val))));
   let board;
+  let round = 0;
   function next(){
+    round++;
     const p = PP.pool(poolKey); let n; do{ n = pick(p); }while(target && n.id === target.id && p.length > 1);
     target = n; done = false; $('[data-fb]', root).textContent = '';
     board = PP.board($('[data-board]', root), {notes:PP.POOLS[poolKey], label:'finger', width:230, onPick:pickBoard});
@@ -151,14 +153,12 @@ EX['asociacion'] = function(root){
         $('[data-staff]', root).innerHTML = PP.staff([{id:n.id, dur:'w'}], {G:13, spacing:80, minWidth:220});
       }
     } else {
-      $('[data-prompt]', root).innerHTML = `¿Dónde se escribe la nota marcada? Cuerda ${strTag(n.s)}, ${PP.fingerText(n)}.`;
-      const ord = p.slice().sort((a, b) => a.m - b.m || a.d - b.d).filter((x, i, arr) => !i || x.m !== arr[i - 1].m || x.d !== arr[i - 1].d);
-      $('[data-staff]', root).innerHTML = PP.staff(ord.map(x => ({id:x.id, dur:'q'})), {G:10, spacing:54, clickable:true, hideAcc:false});
-      root.querySelectorAll('[data-staff] .nh').forEach(e => e.style.opacity = '.35');
-      PP.bindStaff($('[data-staff]', root), g => pickStaff(g));
+      $('[data-prompt]', root).innerHTML = `Coloca en el pentagrama la nota marcada en el mástil: cuerda ${strTag(n.s)}, ${PP.fingerText(n)}.`;
       board.mark(n.id, `var(--${PP.STRING_CLASS[n.s]})`);
-      if(count){ const open = openOf(n), g = $(`[data-staff] [data-id="${open.id}"]`, root);
-        if(g && open.id !== n.id){ const h = g.querySelector('.nh'); h.style.opacity = '1'; h.style.fill = `var(--${PP.STRING_CLASS[open.s]})`; } }
+      $('[data-staff]', root).classList.remove('steps-hidden');
+      const ds = p.map(x => x.d), open = openOf(n);
+      placer = PP.placeStaff($('[data-staff]', root), {G:14, minD:Math.min(...ds), maxD:Math.max(...ds),
+        ref:count && open.id !== n.id ? {d:open.d, color:`var(--${PP.STRING_CLASS[open.s]})`} : null, onCheck:placeCheck});
     }
   }
   // nombre de la nota, pequeño, al lado de la nota del pentagrama (verde oscuro si aciertas, rojo oscuro si no)
@@ -182,12 +182,29 @@ EX['asociacion'] = function(root){
     if(mode === 1){ tag(staffNote(target.id), target, right); revealSteps(); }
     if(right){ sc.hit(root); done = true; PP.play(target.m, .9);
       $('[data-fb]', root).innerHTML = `<span class="ok">Eso es.</span> ${PP.name(target)}: cuerda ${strTag(target.s)}, ${PP.fingerText(target)}.${stepText()}`;
-      setTimeout(() => { if(done) next(); }, 1500); }
+      const r0 = round; setTimeout(() => { if(done && r0 === round) next(); }, 1500); }
     else { sc.miss(root); PP.play(clicked.m, .6, 0, {vol:.12});
       $('[data-fb]', root).innerHTML = `<span class="bad">Esa es ${PP.name(clicked)}</span> (cuerda ${strTag(clicked.s)}, ${PP.fingerText(clicked)}). Prueba otra vez.${mode === 1 && count ? ' Fíjate en los números de debajo: son los escalones desde la cuerda al aire.' : ''}`; }
   }
   function pickBoard(n){ if(mode !== 1 || done) return; const r = n.id === target.id || (n.m === target.m && n.d === target.d); board.mark(n.id, r ? 'var(--ok)' : 'var(--bad)'); result(r, n); }
-  function pickStaff(g){ if(mode !== 2 || done) return; const n = PP.NOTES[g.dataset.id], r = n.m === target.m && n.d === target.d; const h = g.querySelector('.nh'); h.style.opacity = '1'; h.style.fill = r ? 'var(--ok)' : 'var(--bad)'; tag(g, n, r); result(r, n); }
+  // modo 2: la nota que el alumno ha colocado (posición y sostenido) frente a la marcada en el mástil
+  let placer = null;
+  const labelAt = (d, sh) => { const nat = Object.values(PP.NOTES).find(x => x.d === d && !x.acc);
+    const n = Object.values(PP.NOTES).find(x => x.d === d && !!x.acc === sh);
+    return n ? PP.name(n) : nat ? PP.name(nat) + (sh ? (PP.useLetters() ? '♯' : '♯') : '') : '?'; };
+  function placeCheck(d, sh){
+    if(done) return {ok:false, label:labelAt(d, sh)};
+    const ok = d === target.d && sh === !!target.acc, label = labelAt(d, sh);
+    if(ok){ result(true, target); }
+    else {
+      sc.miss(root);
+      const n = Object.values(PP.NOTES).find(x => x.d === d && !!x.acc === sh);
+      if(n) PP.play(n.m, .6, 0, {vol:.12});
+      const hint = d === target.d ? (sh ? ' Va en ese sitio, pero sin sostenido.' : ' Va en ese sitio, pero le falta el sostenido.') : '';
+      $('[data-fb]', root).innerHTML = `<span class="bad">Ahí está ${label}.</span>${hint} Prueba otra vez.${count ? ' Cuenta los escalones desde la cuerda al aire marcada.' : ''}`;
+    }
+    return {ok, label};
+  }
   root.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { mode = +b.dataset.mode; seg('[data-mode]', 'mode', mode); next(); }));
   root.querySelectorAll('[data-pool]').forEach(b => b.addEventListener('click', () => { poolKey = b.dataset.pool; seg('[data-pool]', 'pool', poolKey); next(); }));
   $('[data-next]', root).addEventListener('click', next);
@@ -196,8 +213,8 @@ EX['asociacion'] = function(root){
   $('[data-show]', root).addEventListener('click', () => {
     if(!target) return; done = true; PP.play(target.m, 1); sc.miss(root);
     if(mode === 1) board.mark(target.id, 'var(--ok)');
-    else { const h = $(`[data-staff] [data-id="${target.id}"] .nh`, root); if(h){ h.style.opacity = '1'; h.style.fill = 'var(--ok)'; } }
-    tag(staffNote(target.id), target, true); revealSteps();
+    else if(placer) placer.reveal(target.d, !!target.acc, PP.name(target));
+    if(mode === 1){ tag(staffNote(target.id), target, true); revealSteps(); }
     $('[data-fb]', root).innerHTML = `Es ${PP.name(target)}: cuerda ${strTag(target.s)}, ${PP.fingerText(target)}.`;
   });
   seg('[data-mode]', 'mode', 1); seg('[data-pool]', 'pool', poolKey);
